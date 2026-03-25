@@ -1,0 +1,49 @@
+use tauri::Manager;
+use tracing_subscriber::EnvFilter;
+
+use crate::app::state::AppState;
+use crate::commands::{app, logs, system};
+
+pub fn build_app() -> tauri::Builder<tauri::Wry> {
+    init_tracing();
+
+    tauri::Builder::default()
+        .setup(|app| {
+            let launched_at = chrono_like_now();
+            app.manage(AppState::new(launched_at));
+            let handle = app.handle();
+            if let Ok(paths) = crate::services::path_service::get_app_paths(&handle) {
+                let _ = crate::services::fs_service::ensure_dir(paths.app_log_dir.clone());
+                let _ = crate::services::fs_service::ensure_dir(paths.suggested_repository_dir.clone());
+            }
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            app::bootstrap_app,
+            app::start_demo_task,
+            system::get_system_info,
+            system::get_app_paths,
+            logs::write_test_log
+        ])
+}
+
+fn init_tracing() {
+    let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+
+    let _ = tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_target(false)
+        .compact()
+        .try_init();
+}
+
+fn chrono_like_now() -> String {
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+
+    format!("{now}")
+}
