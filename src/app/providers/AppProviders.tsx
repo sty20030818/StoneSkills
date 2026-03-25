@@ -1,22 +1,24 @@
-import { BrowserRouter } from "react-router-dom";
-import { AppRouter } from "@/app/router/AppRouter";
-import { AppErrorBoundary } from "@/components/shared/AppErrorBoundary";
-import { useAppBootstrap } from "@/hooks/useAppBootstrap";
-import { useTaskEventBridge } from "@/hooks/useTaskEventBridge";
+import { BrowserRouter } from 'react-router-dom'
+import { AppRouter } from '@/app/router/AppRouter'
+import { AppToaster } from '@/app/providers/AppToaster'
+import { AppErrorBoundary } from '@/components/shared/AppErrorBoundary'
+import { useAppBootstrap } from '@/hooks/useAppBootstrap'
+import { useTaskEventBridge } from '@/hooks/useTaskEventBridge'
 
 function AppRuntime() {
-  useAppBootstrap();
-  useTaskEventBridge();
+	useAppBootstrap()
+	useTaskEventBridge()
 
-  return <AppRouter />;
+	return <AppRouter />
 }
 
 export function AppProviders() {
-  return (
-    <AppErrorBoundary>
-      <BrowserRouter>
-        <AppRuntime />
-      </BrowserRouter>
-    </AppErrorBoundary>
-  );
+	return (
+		<AppErrorBoundary>
+			<BrowserRouter>
+				<AppRuntime />
+				<AppToaster />
+			</BrowserRouter>
+		</AppErrorBoundary>
+	)
 }

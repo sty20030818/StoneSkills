@@ -1,0 +1,45 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"plugins": ["react", "vitest"],
+	"categories": {},
+	"rules": {},
+	"settings": {
+		"jsx-a11y": {
+			"components": {},
+			"attributes": {}
+		},
+		"next": {
+			"rootDir": []
+		},
+		"react": {
+			"formComponents": [],
+			"linkComponents": [],
+			"componentWrapperFunctions": []
+		},
+		"jsdoc": {
+			"ignorePrivate": false,
+			"ignoreInternal": false,
+			"ignoreReplacesDocs": true,
+			"overrideReplacesDocs": true,
+			"augmentsExtendsReplacesDocs": false,
+			"implementsReplacesDocs": false,
+			"exemptDestructuredRootsFromChecks": false,
+			"tagNamePreference": {}
+		},
+		"vitest": {
+			"typecheck": false
+		}
+	},
+	"env": {
+		"builtin": true
+	},
+	"globals": {},
+	"ignorePatterns": [
+		".codex/**",
+		"dist/**",
+		"node_modules/**",
+		"src-tauri/**",
+		"Document/**",
+		"openspec/**"
+	]
+}
