@@ -1,38 +1,26 @@
 export const NAV_ITEMS = [
 	{
-		to: '/dashboard',
-		label: '总览',
-		description: '项目启动与诊断总览',
-		badge: 'OV',
-	},
-	{
 		to: '/skills',
 		label: '我的 Skills',
-		description: '收录、搜索与治理入口',
+		description: '默认首页与治理工作台',
 		badge: 'SK',
 	},
 	{
 		to: '/install',
 		label: '安装 / 导入',
-		description: 'GitHub、本地与扫描入口',
+		description: '导入来源、检测预览与安装确认',
 		badge: 'IN',
 	},
 	{
-		to: '/targets',
+		to: '/tools',
 		label: 'AI 工具',
-		description: '目标工具与适配矩阵',
-		badge: 'TG',
-	},
-	{
-		to: '/updates',
-		label: '更新中心',
-		description: '待更新与版本摘要',
-		badge: 'UP',
+		description: '环境概览、工具连接与轻量修复',
+		badge: 'AI',
 	},
 	{
 		to: '/settings',
 		label: '设置',
-		description: '日志、路径与系统偏好',
+		description: '长期偏好与开发诊断入口',
 		badge: 'ST',
 	},
 ] as const

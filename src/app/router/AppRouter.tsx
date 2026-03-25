@@ -1,10 +1,8 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { ShellLayout } from '@/app/layout/ShellLayout'
-import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 import { SkillsPage } from '@/pages/skills/SkillsPage'
 import { InstallPage } from '@/pages/install/InstallPage'
 import { TargetsPage } from '@/pages/targets/TargetsPage'
-import { UpdatesPage } from '@/pages/updates/UpdatesPage'
 import { SettingsPage } from '@/pages/settings/SettingsPage'
 
 export function AppRouter() {
@@ -15,30 +13,49 @@ export function AppRouter() {
 					index
 					element={
 						<Navigate
-							to='/dashboard'
+							to='/skills'
 							replace
 						/>
 					}
-				/>
-				<Route
-					path='/dashboard'
-					element={<DashboardPage />}
 				/>
 				<Route
 					path='/skills'
 					element={<SkillsPage />}
 				/>
 				<Route
+					path='/dashboard'
+					element={
+						<Navigate
+							to='/skills'
+							replace
+						/>
+					}
+				/>
+				<Route
+					path='/updates'
+					element={
+						<Navigate
+							to='/skills'
+							replace
+						/>
+					}
+				/>
+				<Route
 					path='/install'
 					element={<InstallPage />}
 				/>
 				<Route
-					path='/targets'
+					path='/tools'
 					element={<TargetsPage />}
 				/>
 				<Route
-					path='/updates'
-					element={<UpdatesPage />}
+					path='/targets'
+					element={
+						<Navigate
+							to='/tools'
+							replace
+						/>
+					}
 				/>
 				<Route
 					path='/settings'

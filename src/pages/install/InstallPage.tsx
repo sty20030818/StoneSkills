@@ -1,28 +1,51 @@
-import { PageScaffold } from '@/components/shared/PageScaffold'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { PageScaffold } from '@/components/shared/PageScaffold'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export function InstallPage() {
 	return (
 		<PageScaffold
-			eyebrow='Import Channels'
-			title='安装入口只有一个，但来源和后续动作会被统一编排。'
-			description='这里会承接 GitHub 安装、本地导入和扫描导入三条路径。当前先把页面骨架和信息层级固定下来。'>
-			<section className='grid gap-4 2xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.95fr)]'>
-				<EmptyState
-					title='安装向导待接入'
-					description='下一阶段会把元数据预览、冲突提示、安装方式和立即启用入口放在这里。'
-				/>
+			eyebrow='Skill Import Flow'
+			title='导入 / 安装'
+			description='从 GitHub、本地目录或自动扫描中导入 Skill，并在安装前确认支持范围、依赖和潜在冲突。'>
+			<section className='grid gap-4 2xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.9fr)]'>
+				<div className='grid gap-4'>
+					<Card className='border-border/70 shadow-sm'>
+						<CardHeader>
+							<CardTitle>步骤流</CardTitle>
+							<CardDescription>导入流程固定为来源选择、检测预览、安装确认三段。</CardDescription>
+						</CardHeader>
+						<CardContent className='grid gap-3 md:grid-cols-3'>
+							{[
+								['Step 1', '选择来源', 'GitHub、本地目录、自动扫描'],
+								['Step 2', '检测预览', '名称、版本、工具支持、依赖、冲突'],
+								['Step 3', '安装确认', '选择安装方式并返回工作台'],
+							].map(([step, title, text]) => (
+								<div
+									key={step}
+									className='rounded-xl border border-border bg-muted/25 p-4'>
+									<div className='text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase'>{step}</div>
+									<strong className='mt-2 block text-sm'>{title}</strong>
+									<p className='mt-1 text-sm leading-6 text-muted-foreground'>{text}</p>
+								</div>
+							))}
+						</CardContent>
+					</Card>
+					<EmptyState
+						title='安装向导待接入'
+						description='下一阶段会把真实的仓库解析、结构识别、预览检查和确认动作接入这里。'
+					/>
+				</div>
 				<Card className='border-border/70 shadow-sm'>
 					<CardHeader>
-						<CardTitle>Flow Notes</CardTitle>
-						<CardDescription>三条安装入口最终都会汇入同一套确认流。</CardDescription>
+						<CardTitle>来源入口</CardTitle>
+						<CardDescription>无论入口从哪里来，最终都会汇入同一套确认流。</CardDescription>
 					</CardHeader>
 					<CardContent className='flex flex-col gap-3'>
 						{[
-							['GitHub', '仓库解析、结构识别、版本绑定。'],
-							['本地目录', '复制或引用原目录，必要时补齐最小元数据。'],
-							['扫描导入', '常见目录与自定义路径统一纳入确认流。'],
+							['GitHub 仓库', '仓库解析、结构识别、版本绑定与安装预览。'],
+							['本地目录', '引用或复制本地 Skill，并补齐最小元数据。'],
+							['自动扫描', '扫描常见目录后纳入同一套检测与确认流程。'],
 						].map(([label, value]) => (
 							<div
 								key={label}
