@@ -1,7 +1,9 @@
 mod app;
 mod commands;
+mod database;
 mod models;
 mod platform;
+mod repositories;
 mod services;
 
 use app::builder::build_app;

@@ -3,10 +3,16 @@ use tokio::time::{sleep, Duration};
 
 use crate::app::{errors::AppError, events, state::AppState};
 use crate::models::{
-    dto::{BootstrapPayloadDto, DemoTaskAckDto, TaskEventPayload},
+    dto::{
+        AppSettingDto, AppSettingsSnapshotDto, BootstrapPayloadDto, CreateSkillInputDto,
+        DeleteAckDto, DemoTaskAckDto, InstallationDto, SetAppSettingInputDto, SkillDto,
+        TargetDto, TaskEventPayload, UpdateSkillInputDto, UpsertInstallationInputDto,
+        UpsertTargetInputDto,
+    },
     result::ApiResponse,
 };
-use crate::services::{log_service, system_service};
+use crate::database::connection;
+use crate::services::{log_service, registry_service, settings_service, system_service};
 
 #[tauri::command]
 pub fn bootstrap_app(
@@ -81,6 +87,139 @@ pub fn start_demo_task(app: AppHandle) -> ApiResponse<DemoTaskAckDto> {
     });
 
     ApiResponse::success(ack)
+}
+
+#[tauri::command]
+pub fn list_skills(app: AppHandle) -> ApiResponse<Vec<SkillDto>> {
+    let connection = match connection::open_app_database(&app) {
+        Ok(connection) => connection,
+        Err(error) => return ApiResponse::failure(error),
+    };
+
+    match registry_service::list_skills(&connection) {
+        Ok(skills) => ApiResponse::success(skills.into_iter().map(Into::into).collect()),
+        Err(error) => ApiResponse::failure(error),
+    }
+}
+
+#[tauri::command]
+pub fn create_skill(app: AppHandle, input: CreateSkillInputDto) -> ApiResponse<SkillDto> {
+    let mut connection = match connection::open_app_database(&app) {
+        Ok(connection) => connection,
+        Err(error) => return ApiResponse::failure(error),
+    };
+
+    match registry_service::create_skill(&mut connection, input) {
+        Ok(skill) => ApiResponse::success(skill.into()),
+        Err(error) => ApiResponse::failure(error),
+    }
+}
+
+#[tauri::command]
+pub fn update_skill(app: AppHandle, input: UpdateSkillInputDto) -> ApiResponse<SkillDto> {
+    let mut connection = match connection::open_app_database(&app) {
+        Ok(connection) => connection,
+        Err(error) => return ApiResponse::failure(error),
+    };
+
+    match registry_service::update_skill(&mut connection, input) {
+        Ok(skill) => ApiResponse::success(skill.into()),
+        Err(error) => ApiResponse::failure(error),
+    }
+}
+
+#[tauri::command]
+pub fn delete_skill(app: AppHandle, skill_id: String) -> ApiResponse<DeleteAckDto> {
+    let mut connection = match connection::open_app_database(&app) {
+        Ok(connection) => connection,
+        Err(error) => return ApiResponse::failure(error),
+    };
+
+    match registry_service::delete_skill(&mut connection, &skill_id) {
+        Ok(()) => ApiResponse::success(DeleteAckDto { id: skill_id }),
+        Err(error) => ApiResponse::failure(error),
+    }
+}
+
+#[tauri::command]
+pub fn list_targets(app: AppHandle) -> ApiResponse<Vec<TargetDto>> {
+    let connection = match connection::open_app_database(&app) {
+        Ok(connection) => connection,
+        Err(error) => return ApiResponse::failure(error),
+    };
+
+    match registry_service::list_targets(&connection) {
+        Ok(targets) => ApiResponse::success(targets.into_iter().map(Into::into).collect()),
+        Err(error) => ApiResponse::failure(error),
+    }
+}
+
+#[tauri::command]
+pub fn upsert_target(app: AppHandle, input: UpsertTargetInputDto) -> ApiResponse<TargetDto> {
+    let connection = match connection::open_app_database(&app) {
+        Ok(connection) => connection,
+        Err(error) => return ApiResponse::failure(error),
+    };
+
+    match registry_service::upsert_target(&connection, input) {
+        Ok(target) => ApiResponse::success(target.into()),
+        Err(error) => ApiResponse::failure(error),
+    }
+}
+
+#[tauri::command]
+pub fn list_installations(app: AppHandle) -> ApiResponse<Vec<InstallationDto>> {
+    let connection = match connection::open_app_database(&app) {
+        Ok(connection) => connection,
+        Err(error) => return ApiResponse::failure(error),
+    };
+
+    match registry_service::list_installations(&connection) {
+        Ok(items) => ApiResponse::success(items.into_iter().map(Into::into).collect()),
+        Err(error) => ApiResponse::failure(error),
+    }
+}
+
+#[tauri::command]
+pub fn upsert_installation(
+    app: AppHandle,
+    input: UpsertInstallationInputDto,
+) -> ApiResponse<InstallationDto> {
+    let connection = match connection::open_app_database(&app) {
+        Ok(connection) => connection,
+        Err(error) => return ApiResponse::failure(error),
+    };
+
+    match registry_service::upsert_installation(&connection, input) {
+        Ok(item) => ApiResponse::success(item.into()),
+        Err(error) => ApiResponse::failure(error),
+    }
+}
+
+#[tauri::command]
+pub fn get_app_settings_snapshot(app: AppHandle) -> ApiResponse<AppSettingsSnapshotDto> {
+    let connection = match connection::open_app_database(&app) {
+        Ok(connection) => connection,
+        Err(error) => return ApiResponse::failure(error),
+    };
+
+    match settings_service::get_settings_snapshot(&connection) {
+        Ok(snapshot) => ApiResponse::success(snapshot.into()),
+        Err(error) => ApiResponse::failure(error),
+    }
+}
+
+#[tauri::command]
+pub fn set_app_setting(app: AppHandle, input: SetAppSettingInputDto) -> ApiResponse<AppSettingDto> {
+    let connection = match connection::open_app_database(&app) {
+        Ok(connection) => connection,
+        Err(error) => return ApiResponse::failure(error),
+    };
+
+    match settings_service::set_setting(&connection, input) {
+        Ok(setting) => ApiResponse::success(setting.into()),
+        Err(error) => ApiResponse::failure(error),
+    }
 }
 
 fn now_string() -> String {

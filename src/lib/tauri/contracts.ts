@@ -30,6 +30,86 @@ export interface BootstrapPayload {
 	launchedAt: string
 }
 
+export interface SkillSource {
+	id: string
+	sourceType: string
+	sourceUrl: string | null
+	sourceRef: string | null
+	sourceCommit: string | null
+	sourceSubpath: string | null
+	isPrimary: boolean
+}
+
+export interface SkillTargetSupport {
+	targetKey: string
+	supportLevel: string
+}
+
+export interface Skill {
+	id: string
+	slug: string
+	name: string
+	version: string
+	description: string | null
+	author: string | null
+	localPath: string
+	icon: string | null
+	readmePath: string | null
+	installMethod: string
+	checksum: string | null
+	status: string
+	extraMetadataJson: string | null
+	tags: string[]
+	sources: SkillSource[]
+	supportedTargets: SkillTargetSupport[]
+	createdAt: number
+	updatedAt: number
+	lastCheckedAt: number | null
+}
+
+export interface Target {
+	id: string
+	key: string
+	name: string
+	platform: string | null
+	detectStatus: 'unknown' | 'detected' | 'missing' | 'unsupported'
+	installPath: string | null
+	adapterType: string | null
+	enableModes: string[]
+	healthStatus: 'healthy' | 'warning' | 'broken'
+	lastDetectedAt: number | null
+	createdAt: number
+	updatedAt: number
+}
+
+export interface Installation {
+	id: string
+	skillId: string
+	targetId: string
+	installMode: string
+	targetPath: string
+	installedVersion: string
+	status: string
+	lastError: string | null
+	createdAt: number
+	updatedAt: number
+}
+
+export interface AppSettingsSnapshot {
+	repositoryRoot: string | null
+	defaultInstallMode: string | null
+	autoCheckUpdates: boolean | null
+	githubToken: string | null
+	scanPaths: string[]
+	logLevel: string | null
+}
+
+export interface AppSetting {
+	key: string
+	valueJson: unknown
+	updatedAt: number
+}
+
 export interface LogWritePayload {
 	logFilePath: string
 	lineCount: number

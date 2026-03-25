@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use tauri::{AppHandle, Manager};
 
 use crate::app::errors::AppError;
@@ -18,4 +20,9 @@ pub fn get_app_paths(app: &AppHandle) -> Result<AppPathsDto, AppError> {
         app_log_dir: app_log_dir.display().to_string(),
         suggested_repository_dir: suggested_repository_dir.display().to_string(),
     })
+}
+
+pub fn get_database_path(app: &AppHandle) -> Result<PathBuf, AppError> {
+    let app_paths = get_app_paths(app)?;
+    Ok(PathBuf::from(app_paths.app_data_dir).join("stoneskills.sqlite"))
 }

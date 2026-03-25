@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { bootstrapApp } from '@/lib/tauri/commands'
+import { bootstrapApp, getAppSettingsSnapshot, listSkills, listTargets } from '@/lib/tauri/commands'
 import { normalizeCommandError } from '@/lib/tauri/errors'
 import { useAppStore } from '@/stores/app-store'
 
@@ -11,6 +11,12 @@ export function useAppBootstrap() {
 	const setBootstrapError = useAppStore((state) => state.setBootstrapError)
 	const setRepositoryRoots = useAppStore((state) => state.setRepositoryRoots)
 	const setTargetSummary = useAppStore((state) => state.setTargetSummary)
+	const setSkillsLoading = useAppStore((state) => state.setSkillsLoading)
+	const setSkillsReady = useAppStore((state) => state.setSkillsReady)
+	const setSkillsError = useAppStore((state) => state.setSkillsError)
+	const setSettingsLoading = useAppStore((state) => state.setSettingsLoading)
+	const setSettingsReady = useAppStore((state) => state.setSettingsReady)
+	const setSettingsError = useAppStore((state) => state.setSettingsError)
 	const pushToast = useAppStore((state) => state.pushToast)
 
 	useEffect(() => {
@@ -23,19 +29,28 @@ export function useAppBootstrap() {
 		const run = async () => {
 			try {
 				setBootstrapLoading()
+				setSkillsLoading()
+				setSettingsLoading()
 				const payload = await bootstrapApp()
+				const [settingsSnapshot, skills, targets] = await Promise.all([
+					getAppSettingsSnapshot(),
+					listSkills(),
+					listTargets(),
+				])
 
 				setRepositoryRoots({
-					repositoryRoot: null,
+					repositoryRoot: settingsSnapshot.repositoryRoot,
 					suggestedRepositoryRoot: payload.paths.suggestedRepositoryDir,
 				})
+				setSettingsReady(settingsSnapshot)
+				setSkillsReady(skills)
 				setTargetSummary({
 					currentPlatform: payload.system.platformLabel,
-					detectedTargets: [
-						{ id: 'cursor', label: 'Cursor', status: 'unknown' },
-						{ id: 'codex', label: 'Codex', status: 'connected' },
-						{ id: 'claude-code', label: 'Claude Code', status: 'unknown' },
-					],
+					detectedTargets: targets.map((target) => ({
+						id: target.key,
+						label: target.name,
+						status: target.detectStatus,
+					})),
 				})
 
 				if (payload.paths.suggestedRepositoryDir.length === 0) {
@@ -47,6 +62,8 @@ export function useAppBootstrap() {
 			} catch (error) {
 				const normalized = normalizeCommandError(error)
 				setBootstrapError(normalized)
+				setSkillsError(normalized)
+				setSettingsError(normalized)
 				pushToast({
 					title: '应用启动检查失败',
 					description: normalized.message,
@@ -62,6 +79,12 @@ export function useAppBootstrap() {
 		setBootstrapNeedsSetup,
 		setBootstrapReady,
 		setRepositoryRoots,
+		setSettingsError,
+		setSettingsLoading,
+		setSettingsReady,
+		setSkillsError,
+		setSkillsLoading,
+		setSkillsReady,
 		setTargetSummary,
 	])
 }

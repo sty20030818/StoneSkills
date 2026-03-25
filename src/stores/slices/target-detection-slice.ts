@@ -1,7 +1,7 @@
 export interface TargetSummary {
 	id: string
 	label: string
-	status: 'unknown' | 'connected' | 'missing'
+	status: 'unknown' | 'detected' | 'missing' | 'unsupported'
 }
 
 export interface TargetDetectionSlice {

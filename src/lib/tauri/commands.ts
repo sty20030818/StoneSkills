@@ -1,5 +1,16 @@
 import { invoke } from '@tauri-apps/api/core'
-import type { BootstrapPayload, CommandResponse, LogWritePayload, SystemInfo, AppPaths } from '@/lib/tauri/contracts'
+import type {
+	AppPaths,
+	AppSetting,
+	AppSettingsSnapshot,
+	BootstrapPayload,
+	CommandResponse,
+	Installation,
+	LogWritePayload,
+	Skill,
+	SystemInfo,
+	Target,
+} from '@/lib/tauri/contracts'
 import { TauriCommandError } from '@/lib/tauri/errors'
 
 async function callCommand<T>(command: string, args?: Record<string, unknown>): Promise<T> {
@@ -37,4 +48,29 @@ export function writeTestLog() {
 
 export function startDemoTask() {
 	return callCommand<{ taskId: string }>('start_demo_task')
+}
+
+export function listSkills() {
+	return callCommand<Skill[]>('list_skills')
+}
+
+export function listTargets() {
+	return callCommand<Target[]>('list_targets')
+}
+
+export function listInstallations() {
+	return callCommand<Installation[]>('list_installations')
+}
+
+export function getAppSettingsSnapshot() {
+	return callCommand<AppSettingsSnapshot>('get_app_settings_snapshot')
+}
+
+export function setAppSetting(key: string, valueJson: unknown) {
+	return callCommand<AppSetting>('set_app_setting', {
+		input: {
+			key,
+			valueJson,
+		},
+	})
 }

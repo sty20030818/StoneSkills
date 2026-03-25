@@ -3,6 +3,7 @@ use tracing_subscriber::EnvFilter;
 
 use crate::app::state::AppState;
 use crate::commands::{app, logs, system};
+use crate::database;
 
 pub fn build_app() -> tauri::Builder<tauri::Wry> {
     init_tracing();
@@ -16,11 +17,22 @@ pub fn build_app() -> tauri::Builder<tauri::Wry> {
                 let _ = crate::services::fs_service::ensure_dir(paths.app_log_dir.clone());
                 let _ = crate::services::fs_service::ensure_dir(paths.suggested_repository_dir.clone());
             }
+            database::initialize_database(&handle)?;
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             app::bootstrap_app,
             app::start_demo_task,
+            app::create_skill,
+            app::update_skill,
+            app::delete_skill,
+            app::list_skills,
+            app::upsert_target,
+            app::list_targets,
+            app::upsert_installation,
+            app::list_installations,
+            app::get_app_settings_snapshot,
+            app::set_app_setting,
             system::get_system_info,
             system::get_app_paths,
             logs::write_test_log

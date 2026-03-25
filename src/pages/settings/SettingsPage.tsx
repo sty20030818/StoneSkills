@@ -9,6 +9,7 @@ import { useAppStore } from '@/stores/app-store'
 export function SettingsPage() {
 	const [dialogOpen, setDialogOpen] = useState(false)
 	const suggestedRepositoryRoot = useAppStore((state) => state.suggestedRepositoryRoot)
+	const settingsSnapshot = useAppStore((state) => state.settingsSnapshot)
 
 	return (
 		<PageScaffold
@@ -30,7 +31,11 @@ export function SettingsPage() {
 					</CardHeader>
 					<CardContent className='flex flex-col gap-3'>
 						{[
-							['建议仓库路径', suggestedRepositoryRoot ?? '待生成', 'Repo'],
+							[
+								'仓库路径',
+								settingsSnapshot?.repositoryRoot ?? suggestedRepositoryRoot ?? '待生成',
+								'Repo',
+							],
 							['日志入口', '当前阶段已打通文件日志写入能力，后续可以扩展为日志查看器。', 'Logs'],
 						].map(([label, value, tag]) => (
 							<div
@@ -56,8 +61,15 @@ export function SettingsPage() {
 					</CardHeader>
 					<CardContent className='flex flex-col gap-3'>
 						{[
-							['默认安装方式', 'link / copy 策略预留。'],
-							['自动检测开关', '目标工具与更新检测策略预留。'],
+							['默认安装方式', settingsSnapshot?.defaultInstallMode ?? '待配置'],
+							[
+								'自动更新检查',
+								settingsSnapshot?.autoCheckUpdates == null
+									? '待配置'
+									: settingsSnapshot.autoCheckUpdates
+										? '已开启'
+										: '已关闭',
+							],
 						].map(([label, value]) => (
 							<div
 								key={label}
