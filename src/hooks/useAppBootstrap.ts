@@ -1,5 +1,11 @@
 import { useEffect, useRef } from 'react'
-import { bootstrapApp, getAppSettingsSnapshot, listSkills, listTargets } from '@/lib/tauri/commands'
+import {
+	bootstrapApp,
+	getAppSettingsSnapshot,
+	getRepositoryStatus,
+	listSkills,
+	listTargets,
+} from '@/lib/tauri/commands'
 import { normalizeCommandError } from '@/lib/tauri/errors'
 import { useAppStore } from '@/stores/app-store'
 
@@ -10,6 +16,7 @@ export function useAppBootstrap() {
 	const setBootstrapNeedsSetup = useAppStore((state) => state.setBootstrapNeedsSetup)
 	const setBootstrapError = useAppStore((state) => state.setBootstrapError)
 	const setRepositoryRoots = useAppStore((state) => state.setRepositoryRoots)
+	const setRepositoryStatus = useAppStore((state) => state.setRepositoryStatus)
 	const setTargetSummary = useAppStore((state) => state.setTargetSummary)
 	const setSkillsLoading = useAppStore((state) => state.setSkillsLoading)
 	const setSkillsReady = useAppStore((state) => state.setSkillsReady)
@@ -32,16 +39,18 @@ export function useAppBootstrap() {
 				setSkillsLoading()
 				setSettingsLoading()
 				const payload = await bootstrapApp()
-				const [settingsSnapshot, skills, targets] = await Promise.all([
+				const [settingsSnapshot, repositoryStatus, skills, targets] = await Promise.all([
 					getAppSettingsSnapshot(),
+					getRepositoryStatus(),
 					listSkills(),
 					listTargets(),
 				])
 
 				setRepositoryRoots({
-					repositoryRoot: settingsSnapshot.repositoryRoot,
+					repositoryRoot: repositoryStatus.rootPath,
 					suggestedRepositoryRoot: payload.paths.suggestedRepositoryDir,
 				})
+				setRepositoryStatus(repositoryStatus)
 				setSettingsReady(settingsSnapshot)
 				setSkillsReady(skills)
 				setTargetSummary({
@@ -79,6 +88,7 @@ export function useAppBootstrap() {
 		setBootstrapNeedsSetup,
 		setBootstrapReady,
 		setRepositoryRoots,
+		setRepositoryStatus,
 		setSettingsError,
 		setSettingsLoading,
 		setSettingsReady,

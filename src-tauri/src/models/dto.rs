@@ -235,6 +235,16 @@ pub struct AppSettingsSnapshotDto {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct RepositoryStatusDto {
+    pub root_path: String,
+    pub status: String,
+    pub missing_directories: Vec<String>,
+    pub writable: bool,
+    pub message: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SetAppSettingInputDto {
     pub key: String,
     pub value_json: serde_json::Value,
@@ -350,6 +360,18 @@ impl From<AppSettingsSnapshot> for AppSettingsSnapshotDto {
             github_token: value.github_token,
             scan_paths: value.scan_paths,
             log_level: value.log_level,
+        }
+    }
+}
+
+impl From<crate::services::repository_service::RepositoryStatus> for RepositoryStatusDto {
+    fn from(value: crate::services::repository_service::RepositoryStatus) -> Self {
+        Self {
+            root_path: value.root_path,
+            status: value.status.as_str().to_string(),
+            missing_directories: value.missing_directories,
+            writable: value.writable,
+            message: value.message,
         }
     }
 }

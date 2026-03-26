@@ -13,13 +13,19 @@ pub fn get_app_paths(app: &AppHandle) -> Result<AppPathsDto, AppError> {
     let app_log_dir = path
         .app_log_dir()
         .map_err(|error| AppError::new("system/path-app-log", "无法解析日志目录", Some(error.to_string()), true))?;
-    let suggested_repository_dir = app_data_dir.join("repository");
+    let suggested_repository_dir = get_home_dir(app)?.join(".stoneskills");
 
     Ok(AppPathsDto {
         app_data_dir: app_data_dir.display().to_string(),
         app_log_dir: app_log_dir.display().to_string(),
         suggested_repository_dir: suggested_repository_dir.display().to_string(),
     })
+}
+
+pub fn get_home_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
+    app.path()
+        .home_dir()
+        .map_err(|error| AppError::new("system/path-home", "无法解析用户主目录", Some(error.to_string()), true))
 }
 
 pub fn get_database_path(app: &AppHandle) -> Result<PathBuf, AppError> {

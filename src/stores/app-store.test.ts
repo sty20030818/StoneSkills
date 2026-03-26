@@ -10,6 +10,12 @@ describe('useAppStore', () => {
 			skills: [],
 			skillsLoadStatus: 'idle',
 			skillsError: null,
+			repositoryRoot: null,
+			suggestedRepositoryRoot: null,
+			repositoryHealthStatus: null,
+			repositoryMissingDirectories: [],
+			repositoryWritable: null,
+			repositoryMessage: null,
 			settingsSnapshot: null,
 			settingsLoadStatus: 'idle',
 			settingsError: null,
@@ -93,5 +99,25 @@ describe('useAppStore', () => {
 		expect(useAppStore.getState().skillsLoadStatus).toBe('ready')
 		expect(useAppStore.getState().settingsSnapshot?.repositoryRoot).toBe('/tmp/repository')
 		expect(useAppStore.getState().settingsLoadStatus).toBe('ready')
+	})
+
+	it('会缓存仓库健康状态', () => {
+		useAppStore.getState().setRepositoryRoots({
+			repositoryRoot: '/Users/test/.stoneskills',
+			suggestedRepositoryRoot: '/Users/test/.stoneskills',
+		})
+		useAppStore.getState().setRepositoryStatus({
+			rootPath: '/Users/test/.stoneskills',
+			status: 'warning',
+			missingDirectories: ['cache', 'logs'],
+			writable: true,
+			message: '仓库目录结构不完整，可执行修复',
+		})
+
+		expect(useAppStore.getState().repositoryRoot).toBe('/Users/test/.stoneskills')
+		expect(useAppStore.getState().repositoryHealthStatus).toBe('warning')
+		expect(useAppStore.getState().repositoryMissingDirectories).toEqual(['cache', 'logs'])
+		expect(useAppStore.getState().repositoryWritable).toBe(true)
+		expect(useAppStore.getState().repositoryMessage).toBe('仓库目录结构不完整，可执行修复')
 	})
 })

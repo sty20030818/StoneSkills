@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { startDemoTask, writeTestLog } from '@/lib/tauri/commands'
+import { repairRepository, startDemoTask, writeTestLog } from '@/lib/tauri/commands'
 import { normalizeCommandError } from '@/lib/tauri/errors'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { PageScaffold } from '@/components/shared/PageScaffold'
@@ -12,6 +12,12 @@ export function SettingsPage() {
 	const [dialogOpen, setDialogOpen] = useState(false)
 	const suggestedRepositoryRoot = useAppStore((state) => state.suggestedRepositoryRoot)
 	const settingsSnapshot = useAppStore((state) => state.settingsSnapshot)
+	const repositoryRoot = useAppStore((state) => state.repositoryRoot)
+	const repositoryHealthStatus = useAppStore((state) => state.repositoryHealthStatus)
+	const repositoryMissingDirectories = useAppStore((state) => state.repositoryMissingDirectories)
+	const repositoryWritable = useAppStore((state) => state.repositoryWritable)
+	const repositoryMessage = useAppStore((state) => state.repositoryMessage)
+	const setRepositoryStatus = useAppStore((state) => state.setRepositoryStatus)
 	const bootstrapPayload = useAppStore((state) => state.bootstrapPayload)
 	const pushToast = useAppStore((state) => state.pushToast)
 
@@ -38,6 +44,23 @@ export function SettingsPage() {
 			const normalized = normalizeCommandError(error)
 			pushToast({
 				title: '演示任务启动失败',
+				description: normalized.message,
+			})
+		}
+	}
+
+	const handleRepositoryRepair = async () => {
+		try {
+			const result = await repairRepository()
+			setRepositoryStatus(result)
+			pushToast({
+				title: '仓库修复完成',
+				description: result.message ?? '默认仓库目录结构已恢复。',
+			})
+		} catch (error) {
+			const normalized = normalizeCommandError(error)
+			pushToast({
+				title: '仓库修复失败',
 				description: normalized.message,
 			})
 		}
@@ -87,7 +110,11 @@ export function SettingsPage() {
 						</CardHeader>
 						<CardContent className='flex flex-col gap-3'>
 							{[
-								['仓库路径', settingsSnapshot?.repositoryRoot ?? suggestedRepositoryRoot ?? '待生成', 'Repo'],
+								[
+									'仓库路径',
+									repositoryRoot ?? settingsSnapshot?.repositoryRoot ?? suggestedRepositoryRoot ?? '待生成',
+									'Repo',
+								],
 								['日志入口', bootstrapPayload?.paths.appLogDir ?? '当前阶段已打通文件日志写入能力', 'Logs'],
 							].map(([label, value, tag]) => (
 								<div
@@ -104,6 +131,43 @@ export function SettingsPage() {
 									</Badge>
 								</div>
 							))}
+						</CardContent>
+					</Card>
+					<Card className='rounded-[1.5rem] bg-card/84'>
+						<CardHeader>
+							<CardTitle>仓库状态</CardTitle>
+							<CardDescription>固定使用用户目录下的默认仓库，并展示实时健康状态。</CardDescription>
+						</CardHeader>
+						<CardContent className='flex flex-col gap-3'>
+							<div className='rounded-[1.35rem] border border-border/80 bg-background/82 p-4'>
+								<div className='flex items-start justify-between gap-3'>
+									<div className='min-w-0'>
+										<strong className='text-sm'>健康状态</strong>
+										<p className='mt-1 text-sm leading-6 text-muted-foreground'>
+											{repositoryMessage ?? '等待仓库状态返回'}
+										</p>
+									</div>
+									<Badge
+										variant='outline'
+										className='rounded-xl'>
+										{repositoryHealthStatus ?? 'unknown'}
+									</Badge>
+								</div>
+								<div className='mt-3 grid gap-2 text-sm text-muted-foreground'>
+									<p>可写状态：{repositoryWritable == null ? '未知' : repositoryWritable ? '可写' : '不可写'}</p>
+									<p>
+										缺失目录：
+										{repositoryMissingDirectories.length > 0 ? repositoryMissingDirectories.join('、') : '无'}
+									</p>
+								</div>
+							</div>
+							<div className='flex flex-wrap gap-2'>
+								<Button
+									variant='secondary'
+									onClick={handleRepositoryRepair}>
+									修复仓库
+								</Button>
+							</div>
 						</CardContent>
 					</Card>
 				</div>

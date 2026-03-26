@@ -25,7 +25,8 @@ function formatLastScan(skills: Skill[]) {
 export function BottomStatusBar() {
 	const bootstrapPayload = useAppStore((state) => state.bootstrapPayload)
 	const skills = useAppStore((state) => state.skills)
-	const settingsSnapshot = useAppStore((state) => state.settingsSnapshot)
+	const repositoryRoot = useAppStore((state) => state.repositoryRoot)
+	const repositoryHealthStatus = useAppStore((state) => state.repositoryHealthStatus)
 
 	const enabledSkills = skills.filter((skill) => skill.status === 'enabled').length
 	const updateCount = skills.filter((skill) => {
@@ -66,7 +67,11 @@ export function BottomStatusBar() {
 				</div>
 				<div className='min-w-0 flex items-center gap-2 overflow-hidden'>
 					<strong className='shrink-0 text-foreground'>当前仓库</strong>
-					<span className='truncate'>{settingsSnapshot?.repositoryRoot ?? '未设置'}</span>
+					<span className='truncate'>{repositoryRoot ?? '未设置'}</span>
+				</div>
+				<div className='flex items-center gap-2 whitespace-nowrap'>
+					<strong className='text-foreground'>仓库状态</strong>
+					<span>{repositoryHealthStatus ?? '未知'}</span>
 				</div>
 				<div
 					data-testid='status-app-version'

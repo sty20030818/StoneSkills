@@ -5,14 +5,14 @@ use crate::app::{errors::AppError, events, state::AppState};
 use crate::models::{
     dto::{
         AppSettingDto, AppSettingsSnapshotDto, BootstrapPayloadDto, CreateSkillInputDto,
-        DeleteAckDto, DemoTaskAckDto, InstallationDto, SetAppSettingInputDto, SkillDto,
-        TargetDto, TaskEventPayload, UpdateSkillInputDto, UpsertInstallationInputDto,
+        DeleteAckDto, DemoTaskAckDto, InstallationDto, RepositoryStatusDto, SetAppSettingInputDto,
+        SkillDto, TargetDto, TaskEventPayload, UpdateSkillInputDto, UpsertInstallationInputDto,
         UpsertTargetInputDto,
     },
     result::ApiResponse,
 };
 use crate::database::connection;
-use crate::services::{log_service, registry_service, settings_service, system_service};
+use crate::services::{log_service, registry_service, repository_service, settings_service, system_service};
 
 #[tauri::command]
 pub fn bootstrap_app(
@@ -218,6 +218,22 @@ pub fn set_app_setting(app: AppHandle, input: SetAppSettingInputDto) -> ApiRespo
 
     match settings_service::set_setting(&connection, input) {
         Ok(setting) => ApiResponse::success(setting.into()),
+        Err(error) => ApiResponse::failure(error),
+    }
+}
+
+#[tauri::command]
+pub fn get_repository_status(app: AppHandle) -> ApiResponse<RepositoryStatusDto> {
+    match repository_service::get_repository_status(&app) {
+        Ok(status) => ApiResponse::success(status.into()),
+        Err(error) => ApiResponse::failure(error),
+    }
+}
+
+#[tauri::command]
+pub fn repair_repository(app: AppHandle) -> ApiResponse<RepositoryStatusDto> {
+    match repository_service::repair_repository(&app) {
+        Ok(status) => ApiResponse::success(status.into()),
         Err(error) => ApiResponse::failure(error),
     }
 }

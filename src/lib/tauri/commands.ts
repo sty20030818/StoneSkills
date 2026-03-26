@@ -7,6 +7,7 @@ import type {
 	CommandResponse,
 	Installation,
 	LogWritePayload,
+	RepositoryStatus,
 	Skill,
 	SystemInfo,
 	Target,
@@ -64,6 +65,14 @@ export function listInstallations() {
 
 export function getAppSettingsSnapshot() {
 	return callCommand<AppSettingsSnapshot>('get_app_settings_snapshot')
+}
+
+export function getRepositoryStatus() {
+	return callCommand<RepositoryStatus>('get_repository_status')
+}
+
+export function repairRepository() {
+	return callCommand<RepositoryStatus>('repair_repository')
 }
 
 export function setAppSetting(key: string, valueJson: unknown) {

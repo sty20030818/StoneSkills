@@ -15,9 +15,9 @@
         "title": "StoneSkills",
         "label": "main",
         "width": 1460,
-        "height": 920,
+        "height": 1020,
         "minWidth": 1180,
-        "minHeight": 760,
+        "minHeight": 800,
         "resizable": true,
         "hiddenTitle": true
       }

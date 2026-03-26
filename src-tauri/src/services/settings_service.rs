@@ -4,7 +4,7 @@ use crate::app::errors::AppError;
 use crate::models::domain::{AppSettingsSnapshot, InstallMode};
 use crate::models::dto::SetAppSettingInputDto;
 use crate::repositories::settings_repository;
-use crate::services::path_service;
+use crate::services::repository_service;
 
 pub const REPOSITORY_ROOT_KEY: &str = "repository_root";
 pub const DEFAULT_INSTALL_MODE_KEY: &str = "default_install_mode";
@@ -18,12 +18,12 @@ pub fn ensure_default_settings(
     app: &AppHandle,
 ) -> Result<(), AppError> {
     let now = crate::services::registry_service::now_ts();
-    let paths = path_service::get_app_paths(app)?;
+    let repository_root = repository_service::default_repository_root(app)?;
 
     settings_repository::set_setting_if_missing(
         connection,
         REPOSITORY_ROOT_KEY,
-        &serde_json::Value::String(paths.suggested_repository_dir),
+        &serde_json::Value::String(repository_root.display().to_string()),
         now,
     )?;
     settings_repository::set_setting_if_missing(

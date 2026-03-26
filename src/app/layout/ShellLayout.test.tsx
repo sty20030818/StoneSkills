@@ -78,6 +78,12 @@ describe('ShellLayout', () => {
 			],
 			skillsLoadStatus: 'ready',
 			currentPlatform: 'macOS',
+			repositoryRoot: '/tmp/repo',
+			suggestedRepositoryRoot: '/tmp/repo',
+			repositoryHealthStatus: 'healthy',
+			repositoryMissingDirectories: [],
+			repositoryWritable: true,
+			repositoryMessage: '仓库目录可用',
 			detectedTargets: [
 				{ id: 'claude-code', label: 'Claude Code', status: 'detected' },
 				{ id: 'codex', label: 'Codex', status: 'missing' },

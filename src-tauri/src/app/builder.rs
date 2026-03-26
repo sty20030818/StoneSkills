@@ -15,7 +15,6 @@ pub fn build_app() -> tauri::Builder<tauri::Wry> {
             let handle = app.handle();
             if let Ok(paths) = crate::services::path_service::get_app_paths(&handle) {
                 let _ = crate::services::fs_service::ensure_dir(paths.app_log_dir.clone());
-                let _ = crate::services::fs_service::ensure_dir(paths.suggested_repository_dir.clone());
             }
             database::initialize_database(&handle)?;
             Ok(())
@@ -33,6 +32,8 @@ pub fn build_app() -> tauri::Builder<tauri::Wry> {
             app::list_installations,
             app::get_app_settings_snapshot,
             app::set_app_setting,
+            app::get_repository_status,
+            app::repair_repository,
             system::get_system_info,
             system::get_app_paths,
             logs::write_test_log

@@ -110,6 +110,14 @@ export interface AppSetting {
 	updatedAt: number
 }
 
+export interface RepositoryStatus {
+	rootPath: string
+	status: 'healthy' | 'warning' | 'broken'
+	missingDirectories: string[]
+	writable: boolean
+	message: string | null
+}
+
 export interface LogWritePayload {
 	logFilePath: string
 	lineCount: number

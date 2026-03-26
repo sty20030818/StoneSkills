@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { getAppSettingsSnapshot, listSkills } from '@/lib/tauri/commands'
+import { getAppSettingsSnapshot, getRepositoryStatus, listSkills, repairRepository } from '@/lib/tauri/commands'
 
 const { invokeMock } = vi.hoisted(() => ({
 	invokeMock: vi.fn(),
@@ -67,5 +67,43 @@ describe('tauri commands', () => {
 
 		expect(result.repositoryRoot).toBe('/tmp/repository')
 		expect(invokeMock).toHaveBeenCalledWith('get_app_settings_snapshot', undefined)
+	})
+
+	it('会读取仓库状态', async () => {
+		invokeMock.mockResolvedValue({
+			ok: true,
+			data: {
+				rootPath: '/Users/test/.stoneskills',
+				status: 'warning',
+				missingDirectories: ['cache'],
+				writable: true,
+				message: '仓库目录结构不完整，可执行修复',
+			},
+			error: null,
+		})
+
+		const result = await getRepositoryStatus()
+
+		expect(result.status).toBe('warning')
+		expect(invokeMock).toHaveBeenCalledWith('get_repository_status', undefined)
+	})
+
+	it('会触发仓库修复', async () => {
+		invokeMock.mockResolvedValue({
+			ok: true,
+			data: {
+				rootPath: '/Users/test/.stoneskills',
+				status: 'healthy',
+				missingDirectories: [],
+				writable: true,
+				message: '仓库目录可用',
+			},
+			error: null,
+		})
+
+		const result = await repairRepository()
+
+		expect(result.status).toBe('healthy')
+		expect(invokeMock).toHaveBeenCalledWith('repair_repository', undefined)
 	})
 })
