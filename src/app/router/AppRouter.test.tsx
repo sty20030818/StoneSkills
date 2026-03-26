@@ -116,5 +116,26 @@ describe('AppRouter', () => {
 		expect(screen.getByRole('link', { name: /设置/i })).toBeInTheDocument()
 		expect(screen.queryByText('总览')).not.toBeInTheDocument()
 		expect(screen.queryByText('更新中心')).not.toBeInTheDocument()
+		expect(screen.getByText('StoneSkills')).toBeInTheDocument()
+		expect(screen.getByTestId('sidebar-brand-logo')).toBeInTheDocument()
+		expect(screen.queryByText('默认首页与治理工作台')).not.toBeInTheDocument()
+		expect(screen.queryByText('导入来源、检测预览与安装确认')).not.toBeInTheDocument()
+		expect(screen.queryByText('Architecture Shift')).not.toBeInTheDocument()
+		expect(screen.queryByText('Primary Navigation')).not.toBeInTheDocument()
+	})
+
+	it('当前导航项会使用更强的选中态高亮', async () => {
+		render(
+			<MemoryRouter initialEntries={['/skills']}>
+				<AppRouter />
+			</MemoryRouter>,
+		)
+
+		const activeLink = await screen.findByRole('link', { name: /我的 Skills/i })
+
+		expect(activeLink).toHaveAttribute('aria-current', 'page')
+		expect(activeLink).toHaveClass('ring-1')
+		expect(activeLink).toHaveClass('hover:bg-background')
+		expect(activeLink).not.toHaveClass('hover:bg-sidebar-accent')
 	})
 })

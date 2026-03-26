@@ -57,7 +57,7 @@ export function SettingsPage() {
 			}>
 			<section className='grid gap-4 2xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,1fr)]'>
 				<div className='grid gap-4'>
-					<Card className='border-border/70 shadow-sm'>
+					<Card className='rounded-[1.5rem] bg-card/84'>
 						<CardHeader>
 							<CardTitle>长期偏好</CardTitle>
 							<CardDescription>设置页只承载会长期存在的系统偏好和默认行为。</CardDescription>
@@ -73,34 +73,26 @@ export function SettingsPage() {
 							].map(([label, value]) => (
 								<div
 									key={label}
-									className='rounded-xl border border-border bg-muted/25 p-4'>
+									className='rounded-[1.35rem] border border-border/80 bg-muted/38 p-4'>
 									<strong className='text-sm'>{label}</strong>
 									<p className='mt-1 text-sm leading-6 text-muted-foreground'>{value}</p>
 								</div>
 							))}
 						</CardContent>
 					</Card>
-					<Card className='border-border/70 shadow-sm'>
+					<Card className='rounded-[1.5rem] bg-card/84'>
 						<CardHeader>
 							<CardTitle>当前环境</CardTitle>
 							<CardDescription>当前设备和项目的默认路径、日志与系统快照。</CardDescription>
 						</CardHeader>
 						<CardContent className='flex flex-col gap-3'>
 							{[
-								[
-									'仓库路径',
-									settingsSnapshot?.repositoryRoot ?? suggestedRepositoryRoot ?? '待生成',
-									'Repo',
-								],
-								[
-									'日志入口',
-									bootstrapPayload?.paths.appLogDir ?? '当前阶段已打通文件日志写入能力',
-									'Logs',
-								],
+								['仓库路径', settingsSnapshot?.repositoryRoot ?? suggestedRepositoryRoot ?? '待生成', 'Repo'],
+								['日志入口', bootstrapPayload?.paths.appLogDir ?? '当前阶段已打通文件日志写入能力', 'Logs'],
 							].map(([label, value, tag]) => (
 								<div
 									key={label}
-									className='flex items-start justify-between gap-3 rounded-xl border border-border bg-background/80 p-4'>
+									className='flex items-start justify-between gap-3 rounded-[1.35rem] border border-border/80 bg-background/82 p-4'>
 									<div className='min-w-0'>
 										<strong className='text-sm'>{label}</strong>
 										<p className='mt-1 break-all text-sm leading-6 text-muted-foreground'>{value}</p>
@@ -116,15 +108,15 @@ export function SettingsPage() {
 					</Card>
 				</div>
 				<div className='grid gap-4'>
-					<Card className='border-border/70 shadow-sm'>
+					<Card className='rounded-[1.5rem] bg-card/84'>
 						<CardHeader>
 							<CardTitle>开发与诊断</CardTitle>
 							<CardDescription>原先独立 Dashboard 承担的验证能力统一收纳在这里。</CardDescription>
 						</CardHeader>
 						<CardContent className='flex flex-col gap-3'>
-							<div className='rounded-xl border border-border bg-muted/25 p-4'>
+							<div className='rounded-[1.35rem] border border-info-border bg-info-bg p-4 text-info'>
 								<strong className='text-sm'>开发态入口</strong>
-								<p className='mt-1 text-sm leading-6 text-muted-foreground'>
+								<p className='mt-1 text-sm leading-6 text-info/85'>
 									用于日志写入测试、任务事件演示和桥接链路验证，不进入正式一级导航。
 								</p>
 							</div>
@@ -138,10 +130,12 @@ export function SettingsPage() {
 							</div>
 						</CardContent>
 					</Card>
-					<Card className='border-border/70 shadow-sm'>
+					<Card className='rounded-[1.5rem] bg-card/84'>
 						<CardHeader>
 							<CardTitle>默认行为</CardTitle>
-							<CardDescription>设置页仍然保留全局默认项，但不承接临时处理任务。</CardDescription>
+							<CardDescription>
+								设置页仍然保留全局默认项，但不承接临时处理任务。界面会随系统主题自动切换浅色与深色模式。
+							</CardDescription>
 						</CardHeader>
 						<CardContent className='flex flex-col gap-3'>
 							{[
@@ -154,10 +148,11 @@ export function SettingsPage() {
 											? '已开启'
 											: '已关闭',
 								],
+								['主题模式', '跟随系统'],
 							].map(([label, value]) => (
 								<div
 									key={label}
-									className='rounded-xl border border-border bg-muted/25 p-4'>
+									className='rounded-[1.35rem] border border-border/80 bg-muted/38 p-4'>
 									<strong className='text-sm'>{label}</strong>
 									<p className='mt-1 text-sm leading-6 text-muted-foreground'>{value}</p>
 								</div>

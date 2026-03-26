@@ -3,38 +3,40 @@ import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 
 interface PageScaffoldProps extends PropsWithChildren {
-	eyebrow: string
+	eyebrow?: string
 	title: string
 	description: string
 	actions?: ReactNode
 	headerContent?: ReactNode
 	contentClassName?: string
+	headerDensity?: 'normal' | 'compact'
 }
 
 export function PageScaffold({
-	eyebrow,
 	title,
 	description,
 	actions,
 	headerContent,
 	contentClassName,
+	headerDensity = 'normal',
 	children,
+	// Note: eyebrow is currently not used in the scaffold markup.
 }: PageScaffoldProps) {
+	const isCompact = headerDensity === 'compact'
+
 	return (
 		<div className='flex h-full min-h-0 flex-col'>
 			<header
 				data-testid='page-header'
-				className='shrink-0 border-b border-border/70 bg-background/88 px-4 py-5 backdrop-blur md:px-6'>
-				<div className='flex flex-col gap-4'>
-					<div className='flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between'>
-						<div className='flex max-w-4xl flex-col gap-3'>
-							<div className='w-fit rounded-full border border-border bg-muted px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-muted-foreground uppercase'>
-								{eyebrow}
-							</div>
-							<div className='flex flex-col gap-2'>
-								<h1 className='text-2xl leading-tight font-semibold md:text-[32px]'>{title}</h1>
-								<p className='max-w-3xl text-sm leading-6 text-muted-foreground md:text-[15px]'>{description}</p>
-							</div>
+				className={cn(
+					'shrink-0 border-b border-border/70 bg-background/84 px-4 backdrop-blur-xl md:px-6',
+					isCompact ? 'py-3' : 'py-5',
+				)}>
+				<div className={cn('flex flex-col', isCompact ? 'gap-3' : 'gap-4')}>
+					<div className={cn('flex flex-col', isCompact ? 'gap-2' : 'gap-3', 'lg:flex-row lg:items-end lg:justify-between')}>
+						<div className='flex max-w-4xl flex-col gap-2'>
+							<h1 className='text-2xl leading-tight font-semibold tracking-[-0.03em] md:text-[32px]'>{title}</h1>
+							<p className='max-w-3xl text-sm leading-6 text-muted-foreground md:text-[15px]'>{description}</p>
 						</div>
 						{actions ? <div className='flex flex-wrap items-center gap-2'>{actions}</div> : null}
 					</div>

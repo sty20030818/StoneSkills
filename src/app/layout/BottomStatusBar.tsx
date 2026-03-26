@@ -44,7 +44,7 @@ export function BottomStatusBar() {
 	return (
 		<footer
 			data-testid='bottom-status-bar'
-			className='shrink-0 border-t border-border/70 bg-background/92 px-4 py-1.5 backdrop-blur md:px-6'>
+			className='shrink-0 border-t border-border/70 bg-[var(--status-track-bg)] px-4 py-1.5 backdrop-blur-xl md:px-6'>
 			<div
 				data-testid='bottom-status-track'
 				className='flex h-8 flex-wrap items-center gap-x-5 gap-y-1 overflow-hidden text-[11px] text-muted-foreground md:text-xs'>

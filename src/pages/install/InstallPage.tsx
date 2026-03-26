@@ -1,5 +1,6 @@
 import { EmptyState } from '@/components/shared/EmptyState'
 import { PageScaffold } from '@/components/shared/PageScaffold'
+import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export function InstallPage() {
@@ -10,7 +11,7 @@ export function InstallPage() {
 			description='从 GitHub、本地目录或自动扫描中导入 Skill，并在安装前确认支持范围、依赖和潜在冲突。'>
 			<section className='grid gap-4 2xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.9fr)]'>
 				<div className='grid gap-4'>
-					<Card className='border-border/70 shadow-sm'>
+					<Card className='rounded-[1.5rem] bg-card/84'>
 						<CardHeader>
 							<CardTitle>步骤流</CardTitle>
 							<CardDescription>导入流程固定为来源选择、检测预览、安装确认三段。</CardDescription>
@@ -23,8 +24,8 @@ export function InstallPage() {
 							].map(([step, title, text]) => (
 								<div
 									key={step}
-									className='rounded-xl border border-border bg-muted/25 p-4'>
-									<div className='text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase'>{step}</div>
+									className='rounded-[1.35rem] border border-border/80 bg-muted/38 p-4'>
+									<Badge variant='info'>{step}</Badge>
 									<strong className='mt-2 block text-sm'>{title}</strong>
 									<p className='mt-1 text-sm leading-6 text-muted-foreground'>{text}</p>
 								</div>
@@ -36,7 +37,7 @@ export function InstallPage() {
 						description='下一阶段会把真实的仓库解析、结构识别、预览检查和确认动作接入这里。'
 					/>
 				</div>
-				<Card className='border-border/70 shadow-sm'>
+				<Card className='rounded-[1.5rem] bg-card/84'>
 					<CardHeader>
 						<CardTitle>来源入口</CardTitle>
 						<CardDescription>无论入口从哪里来，最终都会汇入同一套确认流。</CardDescription>
@@ -49,7 +50,7 @@ export function InstallPage() {
 						].map(([label, value]) => (
 							<div
 								key={label}
-								className='rounded-xl border border-border bg-muted/25 p-4'>
+								className='rounded-[1.35rem] border border-border/80 bg-muted/38 p-4'>
 								<strong className='text-sm'>{label}</strong>
 								<p className='mt-1 text-sm leading-6 text-muted-foreground'>{value}</p>
 							</div>

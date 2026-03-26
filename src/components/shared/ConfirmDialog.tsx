@@ -44,7 +44,7 @@ export function ConfirmDialog({
 			}}>
 			<AlertDialogContent className='max-w-md'>
 				<AlertDialogHeader className='items-start text-left'>
-					<div className='rounded-full border border-border bg-muted px-2.5 py-1 text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase'>
+					<div className='rounded-full border border-warning-border bg-warning-bg px-2.5 py-1 text-[11px] font-medium tracking-[0.14em] text-warning uppercase'>
 						危险操作预留
 					</div>
 					<AlertDialogTitle>{title}</AlertDialogTitle>

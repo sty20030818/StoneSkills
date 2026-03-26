@@ -1,11 +1,13 @@
 import { useEffect } from 'react'
 import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
+import { useResolvedTheme } from '@/hooks/useResolvedTheme'
 import { useAppStore } from '@/stores/app-store'
 
 export function AppToaster() {
 	const toasts = useAppStore((state) => state.toasts)
 	const dismissToast = useAppStore((state) => state.dismissToast)
+	const theme = useResolvedTheme()
 
 	useEffect(() => {
 		for (const item of toasts) {
@@ -22,6 +24,7 @@ export function AppToaster() {
 			position='bottom-right'
 			richColors
 			closeButton
+			theme={theme}
 		/>
 	)
 }

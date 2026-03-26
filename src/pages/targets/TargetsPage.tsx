@@ -4,6 +4,12 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAppStore } from '@/stores/app-store'
 
+function getTargetTone(status: string) {
+	if (status === 'detected') return 'success'
+	if (status === 'missing') return 'error'
+	return 'warning'
+}
+
 export function TargetsPage() {
 	const platform = useAppStore((state) => state.currentPlatform)
 	const detectedTargets = useAppStore((state) => state.detectedTargets)
@@ -20,7 +26,7 @@ export function TargetsPage() {
 				</>
 			}>
 			<section className='grid gap-4 2xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,1fr)]'>
-				<Card className='border-border/70 shadow-sm'>
+				<Card className='rounded-[1.5rem] bg-card/84'>
 					<CardHeader>
 						<CardTitle>环境概览</CardTitle>
 						<CardDescription>优先回答有哪些工具、哪些可用、哪些异常以及影响范围。</CardDescription>
@@ -29,25 +35,19 @@ export function TargetsPage() {
 						{[
 							['当前平台', platform ?? '待识别'],
 							['已检测工具', String(detectedTargets.length)],
-							[
-								'已连接',
-								String(detectedTargets.filter((target) => target.status === 'detected').length),
-							],
-							[
-								'有异常',
-								String(detectedTargets.filter((target) => target.status !== 'detected').length),
-							],
+							['已连接', String(detectedTargets.filter((target) => target.status === 'detected').length)],
+							['有异常', String(detectedTargets.filter((target) => target.status !== 'detected').length)],
 						].map(([label, value]) => (
 							<div
 								key={label}
-								className='rounded-xl border border-border bg-muted/30 p-4'>
+								className='rounded-[1.35rem] border border-border/80 bg-muted/38 p-4'>
 								<span className='text-xs font-medium tracking-wide text-muted-foreground uppercase'>{label}</span>
 								<strong className='mt-3 block text-lg'>{value}</strong>
 							</div>
 						))}
 					</CardContent>
 				</Card>
-				<Card className='border-border/70 shadow-sm'>
+				<Card className='rounded-[1.5rem] bg-card/84'>
 					<CardHeader>
 						<CardTitle>工具连接状态</CardTitle>
 						<CardDescription>环境页保留轻量修复动作，但不承接单个 Skill 的详细诊断。</CardDescription>
@@ -56,9 +56,12 @@ export function TargetsPage() {
 						{detectedTargets.map((target) => (
 							<div
 								key={target.id}
-								className='flex items-start justify-between gap-3 rounded-xl border border-border bg-background/80 p-4'>
+								className='flex items-start justify-between gap-3 rounded-[1.35rem] border border-border/80 bg-background/82 p-4'>
 								<div>
-									<strong className='text-sm'>{target.label}</strong>
+									<div className='flex flex-wrap items-center gap-2'>
+										<strong className='text-sm'>{target.label}</strong>
+										<Badge variant={getTargetTone(target.status)}>{target.status}</Badge>
+									</div>
 									<p className='mt-1 text-sm text-muted-foreground'>状态：{target.status}</p>
 									<p className='mt-1 text-sm text-muted-foreground'>
 										{target.status === 'detected'

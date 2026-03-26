@@ -1,26 +1,45 @@
+import type { ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from 'react'
+import { BoxIcon } from '@/components/ui/box'
+import { DownloadIcon } from '@/components/ui/download'
+import { HammerIcon } from '@/components/ui/hammer'
+import { SettingsIcon } from '@/components/ui/settings'
+
+export interface AnimatedIconHandle {
+	startAnimation: () => void
+	stopAnimation: () => void
+}
+
+type AnimatedIconComponent = ForwardRefExoticComponent<
+	HTMLAttributes<HTMLDivElement> & {
+		size?: number
+	} & RefAttributes<AnimatedIconHandle>
+>
+
+export interface NavItem {
+	to: string
+	label: string
+	icon: AnimatedIconComponent
+}
+
 export const NAV_ITEMS = [
 	{
 		to: '/skills',
 		label: '我的 Skills',
-		description: '默认首页与治理工作台',
-		badge: 'SK',
+		icon: BoxIcon,
 	},
 	{
 		to: '/install',
 		label: '安装 / 导入',
-		description: '导入来源、检测预览与安装确认',
-		badge: 'IN',
+		icon: DownloadIcon,
 	},
 	{
 		to: '/tools',
 		label: 'AI 工具',
-		description: '环境概览、工具连接与轻量修复',
-		badge: 'AI',
+		icon: HammerIcon,
 	},
 	{
 		to: '/settings',
 		label: '设置',
-		description: '长期偏好与开发诊断入口',
-		badge: 'ST',
+		icon: SettingsIcon,
 	},
-] as const
+] as const satisfies NavItem[]

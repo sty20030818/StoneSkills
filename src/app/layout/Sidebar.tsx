@@ -1,65 +1,72 @@
+import { useRef } from 'react'
 import { NavLink } from 'react-router-dom'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
-import { NAV_ITEMS } from '@/lib/constants/navigation'
+import { BlocksIcon } from '@/components/ui/blocks'
+import { type AnimatedIconHandle, NAV_ITEMS } from '@/lib/constants/navigation'
 import { cn } from '@/lib/utils'
 
 export function Sidebar() {
+	const iconRefs = useRef<Record<string, AnimatedIconHandle | null>>({})
+	const brandIconRef = useRef<AnimatedIconHandle | null>(null)
+
 	return (
 		<aside
 			data-testid='app-sidebar'
-			className='scrollbar-hidden min-h-0 overflow-y-auto border-b border-border/70 bg-background/88 backdrop-blur lg:border-r lg:border-b-0'>
-			<div className='flex min-h-full flex-col gap-6 p-4 md:p-6'>
-				<div className='flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-4 shadow-sm'>
-					<div className='flex size-11 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground'>
-						SS
+			className='scrollbar-hidden min-h-0 overflow-y-auto border-b border-sidebar-border bg-sidebar/92 backdrop-blur-xl lg:border-r lg:border-b-0'>
+			<div className='flex min-h-full flex-col gap-4 px-3 py-5 md:px-4 md:py-6'>
+				<div
+					className='flex cursor-default items-center gap-3 px-2'
+					onMouseEnter={() => brandIconRef.current?.startAnimation()}
+					onMouseLeave={() => brandIconRef.current?.stopAnimation()}>
+					<div
+						aria-hidden='true'
+						data-testid='sidebar-brand-logo'
+						className='flex size-11 items-center justify-center text-primary'>
+						<BlocksIcon
+							ref={brandIconRef}
+							size={34}
+							className='inline-flex items-center justify-center'
+						/>
 					</div>
-					<div className='flex min-w-0 flex-col gap-1'>
-						<strong className='text-sm'>StoneSkills</strong>
-						<span className='text-xs text-muted-foreground'>Skills Workbench</span>
-					</div>
+					<strong className='text-[1.42rem] leading-none tracking-[-0.045em] text-foreground'>StoneSkills</strong>
 				</div>
 
-				<section className='flex flex-col gap-3'>
-					<div className='px-1 text-[11px] font-semibold tracking-[0.16em] text-muted-foreground uppercase'>
-						Primary Navigation
-					</div>
-					<nav className='flex flex-col gap-2'>
+				<section>
+					<nav className='flex flex-col gap-1.5'>
 						{NAV_ITEMS.map((item) => (
 							<NavLink
 								key={item.to}
 								to={item.to}
+								onMouseEnter={() => iconRefs.current[item.to]?.startAnimation()}
+								onMouseLeave={() => iconRefs.current[item.to]?.stopAnimation()}
 								className={({ isActive }) =>
-									cn(
-										'flex items-center gap-3 rounded-xl border border-transparent px-3 py-3 transition-colors hover:border-border hover:bg-muted/70',
-										isActive && 'border-border bg-accent text-accent-foreground shadow-sm',
-									)
+									isActive
+										? 'group relative flex min-h-12 items-center gap-3.5 rounded-xl border border-sidebar-border bg-background/90 px-3.5 text-primary shadow-(--shadow-soft) ring-1 ring-sidebar-ring/25 transition-colors hover:border-sidebar-ring/45 hover:bg-background hover:text-primary'
+										: 'group relative flex min-h-12 items-center gap-3.5 rounded-xl border border-transparent px-3.5 text-sidebar-foreground transition-colors hover:border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
 								}>
-								<Badge
-									variant='outline'
-									className='min-w-11 justify-center rounded-xl'>
-									{item.badge}
-								</Badge>
-								<span className='flex min-w-0 flex-col gap-1'>
-									<strong className='text-sm'>{item.label}</strong>
-									<span className='text-xs text-muted-foreground'>{item.description}</span>
+								<span
+									aria-hidden='true'
+									className={cn(
+										'absolute top-2.5 bottom-2.5 left-1 w-1 rounded-full bg-transparent transition-colors',
+										'group-aria-current-page:bg-primary',
+									)}
+								/>
+								<span className='flex size-9 shrink-0 items-center justify-center rounded-lg bg-transparent'>
+									<item.icon
+										ref={(instance) => {
+											iconRefs.current[item.to] = instance
+										}}
+										size={22}
+										className={cn(
+											'inline-flex size-5.5 items-center justify-center text-icon-default transition-colors',
+											'group-aria-current-page:text-primary',
+										)}
+									/>
 								</span>
+								<strong className='text-[1.02rem] tracking-[-0.02em] text-current'>{item.label}</strong>
 							</NavLink>
 						))}
 					</nav>
 				</section>
-
-				<Card className='mt-auto border-dashed bg-muted/25 shadow-none'>
-					<CardContent className='flex flex-col gap-2 p-4'>
-						<div className='text-[11px] font-semibold tracking-[0.16em] text-muted-foreground uppercase'>
-							Architecture Shift
-						</div>
-						<strong className='text-sm'>四页结构正在落地</strong>
-						<p className='text-sm leading-6 text-muted-foreground'>
-							正式导航收敛到 Skills 工作台、导入流程、AI 工具概览和设置。
-						</p>
-					</CardContent>
-				</Card>
 			</div>
 		</aside>
 	)
