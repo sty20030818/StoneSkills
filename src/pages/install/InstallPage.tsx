@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import type { CommandError, Skill, SkillImportCandidate, SkillImportPreview } from '@/lib/tauri/contracts'
 import {
 	importGithubSkill,
@@ -9,11 +8,11 @@ import {
 	listSkills,
 } from '@/lib/tauri/commands'
 import { normalizeCommandError } from '@/lib/tauri/errors'
-import { PageScaffold } from '@/components/shared/PageScaffold'
+import { usePageHeader } from '@/app/layout/PageHeaderContext'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAppStore } from '@/stores/app-store'
@@ -77,12 +76,14 @@ function CandidateCard({ candidate, sourceType, sourceValue, importing, onImport
 	}
 
 	return (
-		<Card className='rounded-[1.5rem] border-border/70 bg-card/88'>
-			<CardHeader className='gap-3'>
+		<section className='rounded-[1.5rem] border border-border/70 bg-white p-5 shadow-none'>
+			<div className='grid gap-3'>
 				<div className='flex flex-wrap items-start justify-between gap-3'>
 					<div className='space-y-2'>
-						<CardTitle>{candidate.name}</CardTitle>
-						<CardDescription>{candidate.description ?? '当前缺少描述，需要在导入前补齐。'}</CardDescription>
+						<h3 className='text-lg font-semibold tracking-[-0.03em] text-foreground'>{candidate.name}</h3>
+						<p className='text-sm leading-6 text-muted-foreground'>
+							{candidate.description ?? '当前缺少描述，需要在导入前补齐。'}
+						</p>
 					</div>
 					<div className='flex flex-wrap gap-2'>
 						<Badge variant='outline'>{sourceType === 'github' ? 'GitHub' : '本地目录'}</Badge>
@@ -95,8 +96,8 @@ function CandidateCard({ candidate, sourceType, sourceValue, importing, onImport
 					<p>Slug：{candidate.slug}</p>
 					{candidate.readmePath ? <p>README：{candidate.readmePath}</p> : null}
 				</div>
-			</CardHeader>
-			<CardContent className='grid gap-4'>
+			</div>
+			<div className='mt-4 grid gap-4'>
 				<div className='grid gap-3 md:grid-cols-2'>
 					<label className='grid gap-2 text-sm'>
 						<span className='font-medium text-foreground'>Slug</span>
@@ -156,8 +157,8 @@ function CandidateCard({ candidate, sourceType, sourceValue, importing, onImport
 						{importing ? '导入中...' : `导入 ${candidate.name}`}
 					</Button>
 				</div>
-			</CardContent>
-		</Card>
+			</div>
+		</section>
 	)
 }
 
@@ -192,6 +193,7 @@ export function InstallPage() {
 	const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
 	const activeSourceValue = sourceType === 'github' ? githubUrl : localPath
+	const headerContent = usePageHeader('导入 / 安装')
 
 	const handleInspect = async () => {
 		setPreviewing(true)
@@ -223,8 +225,14 @@ export function InstallPage() {
 		setSuccessMessage(null)
 
 		try {
-			const slugOverride = normalizeOverrideValue(candidate.slug, preview?.candidates.find((item) => item.relativePath === candidate.relativePath)?.slug ?? candidate.slug)
-			const nameOverride = normalizeOverrideValue(candidate.name, preview?.candidates.find((item) => item.relativePath === candidate.relativePath)?.name ?? candidate.name)
+			const slugOverride = normalizeOverrideValue(
+				candidate.slug,
+				preview?.candidates.find((item) => item.relativePath === candidate.relativePath)?.slug ?? candidate.slug,
+			)
+			const nameOverride = normalizeOverrideValue(
+				candidate.name,
+				preview?.candidates.find((item) => item.relativePath === candidate.relativePath)?.name ?? candidate.name,
+			)
 			const descriptionOverride = normalizeOverrideValue(
 				candidate.description ?? '',
 				preview?.candidates.find((item) => item.relativePath === candidate.relativePath)?.description ?? '',
@@ -268,58 +276,70 @@ export function InstallPage() {
 	}
 
 	return (
-		<PageScaffold
-			eyebrow='Install Workspace'
-			title='导入 / 安装'
-			description='从公开 GitHub 仓库或本地目录识别 Skill，确认候选项后导入到全局仓库。'
-			contentClassName='py-1 md:py-2'>
-			<section className='grid gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.85fr)]'>
-				<div className='grid gap-4'>
-					<Card className='rounded-[1.7rem] border-border/70 bg-card/88'>
-						<CardHeader className='gap-3'>
-							<CardTitle>选择来源并识别 Skill</CardTitle>
-							<CardDescription>先识别候选 Skill，再补齐字段并确认导入。</CardDescription>
-						</CardHeader>
-						<CardContent className='grid gap-4'>
-							<Tabs
-								value={sourceType}
-								onValueChange={(value) => {
-									setSourceType(value as InstallSource)
-									setPreview(null)
-									setPreviewError(null)
-									setSuccessMessage(null)
-								}}>
-								<TabsList>
-									<TabsTrigger
-										value='github'
-										onClick={() => setSourceType('github')}>
-										GitHub
-									</TabsTrigger>
-									<TabsTrigger
-										value='local'
-										onClick={() => setSourceType('local')}>
-										本地目录
-									</TabsTrigger>
-								</TabsList>
-							</Tabs>
-
+		<>
+			{headerContent}
+			<div className='scrollbar-hidden h-full overflow-y-auto py-1 md:py-2'>
+				<Tabs
+					value={sourceType}
+					onValueChange={(value) => {
+						setSourceType(value as InstallSource)
+						setPreview(null)
+						setPreviewError(null)
+						setSuccessMessage(null)
+					}}
+					className='flex flex-col gap-3'>
+					<TabsList
+						data-testid='install-source-rail'
+						className='h-12 self-start justify-start rounded-full border border-border/70 bg-white p-1 shadow-none'>
+						<TabsTrigger
+							value='github'
+							onClick={() => setSourceType('github')}>
+							GitHub
+						</TabsTrigger>
+						<TabsTrigger
+							value='local'
+							onClick={() => setSourceType('local')}>
+							本地目录
+						</TabsTrigger>
+					</TabsList>
+					<Card
+						data-testid='install-main-card'
+						className='rounded-[1.9rem] border-border/70 bg-white shadow-none'>
+						<CardContent
+							data-testid='install-main-body'
+							className='grid gap-6'>
 							{sourceType === 'github' ? (
-								<div className='grid gap-3'>
-									<label className='grid gap-2 text-sm'>
-										<span className='font-medium text-foreground'>GitHub 仓库 URL</span>
-										<Input
-											value={githubUrl}
-											onChange={(event) => setGithubUrl(event.target.value)}
-											placeholder='输入 GitHub 仓库 URL'
-										/>
-									</label>
-									<div className='flex justify-end'>
-										<Button
-											type='button'
-											disabled={previewing || githubUrl.trim().length === 0}
-											onClick={handleInspect}>
-											{previewing ? '识别中...' : '识别仓库'}
-										</Button>
+								<div className='grid gap-4'>
+									<div className='grid gap-2'>
+										<h2 className='text-lg font-semibold tracking-[-0.03em] text-foreground'>Git 仓库地址</h2>
+										<div
+											data-testid='install-github-input-row'
+											className='grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3'>
+											<label className='grid gap-2 text-sm'>
+												<span className='sr-only'>Git 仓库地址</span>
+												<Input
+													value={githubUrl}
+													onChange={(event) => setGithubUrl(event.target.value)}
+													placeholder='https://github.com/user/repo 或 user/repo'
+												/>
+											</label>
+											<Button
+												type='button'
+												className='min-w-28'
+												disabled={previewing || githubUrl.trim().length === 0}
+												onClick={handleInspect}>
+												{previewing ? '识别中...' : '识别仓库'}
+											</Button>
+										</div>
+									</div>
+									<div className='grid gap-2 text-sm leading-6 text-muted-foreground'>
+										<p className='font-medium text-foreground'>支持格式：</p>
+										<ul className='grid gap-1 pl-5'>
+											<li className='list-disc'>https://github.com/user/repo 或直接写 user/repo (Github 简写)</li>
+											<li className='list-disc'>
+												https://github.com/user/repo/tree/main/skills/my-skill（指定子路径）
+											</li>
+										</ul>
 									</div>
 								</div>
 							) : (
@@ -356,68 +376,36 @@ export function InstallPage() {
 									<AlertDescription>{successMessage}</AlertDescription>
 								</Alert>
 							) : null}
+
+							{preview ? (
+								<section className='grid gap-4 border-t border-border/70 pt-2'>
+									<div className='flex flex-wrap items-center justify-between gap-3'>
+										<div className='space-y-1'>
+											<h2 className='text-lg font-semibold'>候选 Skill</h2>
+											<p className='text-sm text-muted-foreground'>
+												来源：{preview.sourceLabel}，共识别到 {preview.candidates.length} 个候选项。
+											</p>
+										</div>
+										<Badge variant='info'>{preview.sourceType === 'github' ? 'GitHub' : '本地目录'}</Badge>
+									</div>
+									<div className='grid gap-4'>
+										{preview.candidates.map((candidate) => (
+											<CandidateCard
+												key={`${candidate.relativePath}:${candidate.slug}`}
+												candidate={candidate}
+												sourceType={preview.sourceType}
+												sourceValue={activeSourceValue}
+												importing={importingKey === (candidate.relativePath || candidate.slug)}
+												onImport={handleImport}
+											/>
+										))}
+									</div>
+								</section>
+							) : null}
 						</CardContent>
 					</Card>
-
-					{preview ? (
-						<section className='grid gap-4'>
-							<div className='flex flex-wrap items-center justify-between gap-3'>
-								<div className='space-y-1'>
-									<h2 className='text-lg font-semibold'>候选 Skill</h2>
-									<p className='text-sm text-muted-foreground'>
-										来源：{preview.sourceLabel}，共识别到 {preview.candidates.length} 个候选项。
-									</p>
-								</div>
-								<Badge variant='info'>{preview.sourceType === 'github' ? 'GitHub' : '本地目录'}</Badge>
-							</div>
-							<div className='grid gap-4'>
-								{preview.candidates.map((candidate) => (
-									<CandidateCard
-										key={`${candidate.relativePath}:${candidate.slug}`}
-										candidate={candidate}
-										sourceType={preview.sourceType}
-										sourceValue={activeSourceValue}
-										importing={importingKey === (candidate.relativePath || candidate.slug)}
-										onImport={handleImport}
-									/>
-								))}
-							</div>
-						</section>
-					) : null}
-				</div>
-
-				<div className='grid gap-4'>
-					<Card className='rounded-[1.7rem] border-border/70 bg-card/88'>
-						<CardHeader className='gap-3'>
-							<CardTitle>导入流程</CardTitle>
-							<CardDescription>按固定流程执行，避免导入后再返工。</CardDescription>
-						</CardHeader>
-						<CardContent className='grid gap-3 text-sm leading-6 text-muted-foreground'>
-							<p>1. 选择 GitHub 仓库或本地目录。</p>
-							<p>2. 识别候选 Skill，并检查冲突与缺失字段。</p>
-							<p>3. 按需覆盖 slug、名称、描述。</p>
-							<p>4. 确认导入后，Skill 会复制到全局仓库。</p>
-						</CardContent>
-					</Card>
-
-					<Card className='rounded-[1.7rem] border-border/70 bg-card/88'>
-						<CardHeader className='gap-3'>
-							<CardTitle>导入后操作</CardTitle>
-							<CardDescription>成功后仍停留在当前页面，便于继续安装其他 Skill。</CardDescription>
-						</CardHeader>
-						<CardContent className='grid gap-3'>
-							<Button
-								asChild
-								variant='secondary'>
-								<Link to='/skills'>去我的 Skills 查看</Link>
-							</Button>
-							<p className='text-sm leading-6 text-muted-foreground'>
-								如果当前候选项存在 slug 冲突或缺少必要字段，页面会直接阻止导入，避免破坏已安装数据。
-							</p>
-						</CardContent>
-					</Card>
-				</div>
-			</section>
-		</PageScaffold>
+				</Tabs>
+			</div>
+		</>
 	)
 }

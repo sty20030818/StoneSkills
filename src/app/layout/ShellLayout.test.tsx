@@ -99,27 +99,71 @@ describe('ShellLayout', () => {
 		})
 	})
 
-	it('使用固定壳层并在底部显示横跨全宽的产品状态栏', async () => {
+	it('使用岛屿式壳层并由全局头部承载页面标题与按钮', async () => {
 		render(
 			<MemoryRouter initialEntries={['/skills']}>
 				<AppRouter />
 			</MemoryRouter>,
 		)
 
-		await screen.findByRole('heading', {
+		const heading = await screen.findByRole('heading', {
 			level: 1,
 			name: '我的 Skills',
 		})
 
 		expect(screen.queryByText('Application Shell')).not.toBeInTheDocument()
-		expect(screen.getByTestId('app-shell')).toBeInTheDocument()
-		expect(screen.getByTestId('app-sidebar')).toHaveClass('scrollbar-hidden')
+		const shell = screen.getByTestId('app-shell')
+		expect(shell).toBeInTheDocument()
+		expect(shell).toHaveClass('bg-(--shell-app-bg)')
+		const sidebarIsland = screen.getByTestId('app-sidebar')
+		const brandIsland = screen.getByTestId('app-brand-island')
+		const mainIsland = screen.getByTestId('app-main-island')
+
+		expect(sidebarIsland).toHaveClass('scrollbar-hidden')
+		expect(sidebarIsland).toHaveClass('bg-(--shell-panel-bg)')
+		expect(sidebarIsland).toHaveClass('border-(--shell-border-subtle)')
+		expect(sidebarIsland).toHaveClass('shadow-(--shadow-island-flat)')
+		expect(sidebarIsland.firstElementChild?.tagName).toBe('NAV')
+		expect(brandIsland).toHaveTextContent('StoneSkills')
+		expect(within(sidebarIsland).queryByText('StoneSkills')).not.toBeInTheDocument()
+		expect(brandIsland).toHaveClass('rounded-full')
+		expect(brandIsland).toHaveClass('bg-(--shell-pill-bg)')
+		expect(brandIsland).toHaveClass('min-h-18')
+		expect(brandIsland).toHaveClass('border-(--shell-border-subtle)')
+		expect(brandIsland).toHaveClass('shadow-(--shadow-pill-flat)')
+		expect(within(brandIsland).getByText('Stone')).toHaveClass('text-foreground')
+		expect(within(brandIsland).getByText('Skills')).toHaveClass('text-primary')
+		expect(mainIsland).not.toHaveClass('bg-(--shell-panel-bg)')
+		expect(mainIsland).not.toHaveClass('border-(--shell-border-subtle)')
+		expect(mainIsland).not.toHaveClass('shadow-(--shadow-island-flat)')
+		expect(screen.queryByTestId('page-header')).not.toBeInTheDocument()
+
+		const headerIsland = screen.getByTestId('app-header-island')
+		expect(headerIsland).toContainElement(heading)
+		expect(headerIsland).toHaveClass('rounded-full')
+		expect(headerIsland).toHaveClass('bg-(--shell-pill-bg)')
+		expect(headerIsland).toHaveClass('min-h-18')
+		expect(headerIsland).toHaveClass('border-(--shell-border-subtle)')
+		expect(headerIsland).toHaveClass('shadow-(--shadow-pill-flat)')
+		const headerIcon = within(headerIsland).getByTestId('page-header-icon')
+		expect(headerIcon).toBeInTheDocument()
+		expect(headerIcon).toHaveClass('size-10')
+		expect(headerIcon).not.toHaveClass('bg-(--shell-nav-active-bg)')
+		expect(headerIcon.firstElementChild).toHaveClass('pointer-events-none')
+		expect(headerIcon.firstElementChild).toHaveClass('size-6')
+		expect(within(headerIsland).getByTestId('skills-header-metrics')).toBeInTheDocument()
+		expect(within(headerIsland).getByRole('button', { name: '导入 Skill' })).toBeInTheDocument()
+		expect(within(headerIsland).getByRole('button', { name: '重新扫描' })).toBeInTheDocument()
+
 		const statusBar = screen.getByTestId('bottom-status-bar')
 		const statusTrack = within(statusBar).getByTestId('bottom-status-track')
 		const versionItem = within(statusBar).getByTestId('status-app-version')
 
 		expect(statusBar).toBeInTheDocument()
-		expect(statusTrack).toHaveClass('h-8')
+		expect(statusTrack).toHaveClass('rounded-full')
+		expect(statusTrack).toHaveClass('bg-(--shell-floatbar-surface-bg)')
+		expect(statusTrack).toHaveClass('border-(--shell-border-subtle)')
+		expect(statusTrack).toHaveClass('shadow-(--shadow-floatbar-flat)')
 		expect(within(statusBar).getByText('Skills 总数')).toBeInTheDocument()
 		expect(within(statusBar).getByText('已启用')).toBeInTheDocument()
 		expect(within(statusBar).getByText('待更新')).toBeInTheDocument()

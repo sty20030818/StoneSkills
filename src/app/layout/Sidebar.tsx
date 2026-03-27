@@ -1,73 +1,64 @@
 import { useRef } from 'react'
 import { NavLink } from 'react-router-dom'
-import { BlocksIcon } from '@/components/ui/blocks'
-import { type AnimatedIconHandle, NAV_ITEMS } from '@/lib/constants/navigation'
+import type { AnimatedIconHandle, NavItem } from '@/lib/constants/navigation'
+import { NAV_ITEMS } from '@/lib/constants/navigation'
 import { cn } from '@/lib/utils'
 
-export function Sidebar() {
-	const iconRefs = useRef<Record<string, AnimatedIconHandle | null>>({})
-	const brandIconRef = useRef<AnimatedIconHandle | null>(null)
+interface SidebarNavItemProps {
+	item: NavItem
+}
 
+function SidebarNavItem({ item }: SidebarNavItemProps) {
+	const iconRef = useRef<AnimatedIconHandle | null>(null)
+
+	return (
+		<NavLink
+			key={item.to}
+			to={item.to}
+			onMouseEnter={() => iconRef.current?.startAnimation()}
+			onMouseLeave={() => iconRef.current?.stopAnimation()}
+			onFocus={() => iconRef.current?.startAnimation()}
+			onBlur={() => iconRef.current?.stopAnimation()}
+			className={({ isActive }) =>
+				isActive
+					? 'group relative flex min-h-12 items-center gap-3 rounded-[1.1rem] border border-(--shell-border-subtle) bg-(--shell-nav-active-bg) px-3.5 text-primary transition-colors'
+					: 'group relative flex min-h-12 items-center gap-3 rounded-[1.1rem] border border-transparent px-3.5 text-sidebar-foreground transition-colors hover:border-(--shell-border-subtle) hover:bg-(--shell-panel-hover-bg) hover:text-sidebar-accent-foreground'
+			}>
+			<span
+				aria-hidden='true'
+				className={cn(
+					'absolute top-2.5 bottom-2.5 left-1 w-1 rounded-full bg-transparent transition-colors',
+					'group-aria-current-page:bg-primary',
+				)}
+			/>
+			<span className='flex size-8 shrink-0 items-center justify-center text-icon-default transition-transform duration-200 group-hover:scale-105 group-focus-visible:scale-105'>
+				<item.icon
+					ref={iconRef}
+					size={20}
+					className={cn(
+						'inline-flex size-5 items-center justify-center text-icon-default transition-colors',
+						'group-aria-current-page:text-primary group-hover:text-primary group-focus-visible:text-primary',
+					)}
+				/>
+			</span>
+			<strong className='text-[1rem] tracking-[-0.02em] text-current'>{item.label}</strong>
+		</NavLink>
+	)
+}
+
+export function Sidebar() {
 	return (
 		<aside
 			data-testid='app-sidebar'
-			className='scrollbar-hidden min-h-0 overflow-y-auto border-b border-sidebar-border bg-sidebar/92 backdrop-blur-xl lg:border-r lg:border-b-0'>
-			<div className='flex min-h-full flex-col gap-4 px-3 py-5 md:px-4 md:py-6'>
-				<div
-					className='flex cursor-default items-center gap-3 px-2'
-					onMouseEnter={() => brandIconRef.current?.startAnimation()}
-					onMouseLeave={() => brandIconRef.current?.stopAnimation()}>
-					<div
-						aria-hidden='true'
-						data-testid='sidebar-brand-logo'
-						className='flex size-11 items-center justify-center text-primary'>
-						<BlocksIcon
-							ref={brandIconRef}
-							size={34}
-							className='inline-flex items-center justify-center'
-						/>
-					</div>
-					<strong className='text-[1.42rem] leading-none tracking-[-0.045em] text-foreground'>StoneSkills</strong>
-				</div>
-
-				<section>
-					<nav className='flex flex-col gap-1.5'>
-						{NAV_ITEMS.map((item) => (
-							<NavLink
-								key={item.to}
-								to={item.to}
-								onMouseEnter={() => iconRefs.current[item.to]?.startAnimation()}
-								onMouseLeave={() => iconRefs.current[item.to]?.stopAnimation()}
-								className={({ isActive }) =>
-									isActive
-										? 'group relative flex min-h-12 items-center gap-3.5 rounded-xl border border-sidebar-border bg-background/90 px-3.5 text-primary shadow-(--shadow-soft) ring-1 ring-sidebar-ring/25 transition-colors hover:border-sidebar-ring/45 hover:bg-background hover:text-primary'
-										: 'group relative flex min-h-12 items-center gap-3.5 rounded-xl border border-transparent px-3.5 text-sidebar-foreground transition-colors hover:border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
-								}>
-								<span
-									aria-hidden='true'
-									className={cn(
-										'absolute top-2.5 bottom-2.5 left-1 w-1 rounded-full bg-transparent transition-colors',
-										'group-aria-current-page:bg-primary',
-									)}
-								/>
-								<span className='flex size-9 shrink-0 items-center justify-center rounded-lg bg-transparent'>
-									<item.icon
-										ref={(instance) => {
-											iconRefs.current[item.to] = instance
-										}}
-										size={22}
-										className={cn(
-											'inline-flex size-5.5 items-center justify-center text-icon-default transition-colors',
-											'group-aria-current-page:text-primary',
-										)}
-									/>
-								</span>
-								<strong className='text-[1.02rem] tracking-[-0.02em] text-current'>{item.label}</strong>
-							</NavLink>
-						))}
-					</nav>
-				</section>
-			</div>
+			className='scrollbar-hidden min-h-0 overflow-y-auto rounded-[2rem] border border-(--shell-border-subtle) bg-(--shell-panel-bg) p-4 shadow-(--shadow-island-flat)'>
+			<nav className='flex flex-col gap-2'>
+				{NAV_ITEMS.map((item) => (
+					<SidebarNavItem
+						key={item.to}
+						item={item}
+					/>
+				))}
+			</nav>
 		</aside>
 	)
 }

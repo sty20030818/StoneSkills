@@ -120,18 +120,29 @@ describe('SkillsPage', () => {
 			</MemoryRouter>,
 		)
 
-		expect(
-			await screen.findByRole('heading', {
-				level: 1,
-				name: '我的 Skills',
-			}),
-		).toBeInTheDocument()
+		const heading = await screen.findByRole('heading', {
+			level: 1,
+			name: '我的 Skills',
+		})
 
-		expect(screen.getByTestId('page-header')).toContainElement(screen.getByRole('button', { name: '导入 Skill' }))
+		expect(screen.getByTestId('app-header-island')).toContainElement(heading)
+		expect(screen.queryByTestId('page-header')).not.toBeInTheDocument()
+		expect(screen.getByRole('button', { name: '导入 Skill' })).toBeInTheDocument()
 		expect(screen.getByRole('button', { name: '重新扫描' })).toBeInTheDocument()
+		expect(screen.getByTestId('skills-header-metrics')).toBeInTheDocument()
+		expect(screen.getByTestId('skills-header-metric-installed')).toHaveTextContent('已安装')
+		expect(screen.getByTestId('skills-header-metric-enabled')).toHaveTextContent('已启用')
+		expect(screen.getByTestId('skills-header-metric-updates')).toHaveTextContent('待更新')
+		expect(screen.getByTestId('skills-header-metric-issues')).toHaveTextContent('异常')
 		expect(screen.getByPlaceholderText('搜索 Skills')).toBeInTheDocument()
-		expect(screen.getByRole('tab', { name: '列表视图' })).toHaveAttribute('data-state', 'active')
-		expect(screen.getAllByText('已安装').length).toBeGreaterThan(0)
+		expect(screen.queryByRole('tab', { name: '列表视图' })).not.toBeInTheDocument()
+		expect(screen.queryByRole('tab', { name: '卡片视图' })).not.toBeInTheDocument()
+		expect(screen.getByTestId('skills-filter-bar')).toHaveClass('bg-white')
+		expect(screen.getByTestId('skills-filter-bar')).toHaveClass('shadow-none')
+		expect(screen.getByTestId('skills-card-list')).toBeInTheDocument()
+		expect(screen.getByTestId('skill-card-skill-alpha')).toHaveClass('bg-white')
+		expect(screen.getByTestId('skill-card-skill-alpha')).toHaveClass('shadow-none')
+		expect(screen.queryByTestId('skills-status-overview')).not.toBeInTheDocument()
 	})
 
 	it('导入按钮会跳转到安装与导入页面', async () => {

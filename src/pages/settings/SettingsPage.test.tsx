@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { PageHeaderProvider } from '@/app/layout/PageHeaderContext'
 import { SettingsPage } from '@/pages/settings/SettingsPage'
 import { useAppStore } from '@/stores/app-store'
 
@@ -54,13 +55,31 @@ describe('SettingsPage', () => {
 		})
 	})
 
-	it('展示真实仓库健康状态与缺失目录', () => {
-		render(<SettingsPage />)
+	function renderPage() {
+		return render(
+			<PageHeaderProvider>
+				<SettingsPage />
+			</PageHeaderProvider>,
+		)
+	}
 
-		expect(screen.getByText('仓库状态')).toBeInTheDocument()
-		expect(screen.getByText('warning')).toBeInTheDocument()
-		expect(screen.getByText('可写状态：可写')).toBeInTheDocument()
-		expect(screen.getByText('缺失目录：cache、logs')).toBeInTheDocument()
+	it('展示真实仓库健康状态与缺失目录', () => {
+		renderPage()
+
+		expect(screen.getByTestId('settings-tab-rail')).toBeInTheDocument()
+		expect(screen.getByRole('tab', { name: '常规' })).toBeInTheDocument()
+		expect(screen.getByRole('tab', { name: '环境' })).toBeInTheDocument()
+		expect(screen.getByRole('tab', { name: '仓库' })).toBeInTheDocument()
+		expect(screen.getByRole('tab', { name: '开发诊断' })).toBeInTheDocument()
+		expect(screen.getByTestId('settings-tab-rail')).toHaveClass('bg-white')
+		expect(screen.getByTestId('settings-tab-rail')).toHaveClass('shadow-none')
+		expect(screen.getByTestId('settings-tab-rail')).not.toHaveClass('w-full')
+		expect(screen.getByTestId('settings-tab-rail')).toHaveClass('self-start')
+		expect(screen.getByTestId('settings-panel-card')).toBeInTheDocument()
+		expect(screen.getByTestId('settings-panel-card')).toHaveClass('bg-white')
+		expect(screen.getByTestId('settings-panel-card')).toHaveClass('shadow-none')
+		expect(screen.getByTestId('settings-panel-body')).not.toHaveClass('pt-4')
+		expect(screen.getByText('默认安装方式')).toBeInTheDocument()
 	})
 
 	it('点击修复仓库后会刷新仓库状态并写入成功 toast', async () => {
@@ -72,7 +91,12 @@ describe('SettingsPage', () => {
 			message: '仓库目录可用',
 		})
 
-		render(<SettingsPage />)
+		renderPage()
+		fireEvent.click(screen.getByRole('tab', { name: '仓库' }))
+		expect(screen.getByText('仓库状态')).toBeInTheDocument()
+		expect(screen.getByText('warning')).toBeInTheDocument()
+		expect(screen.getByText('可写状态：可写')).toBeInTheDocument()
+		expect(screen.getByText('缺失目录：cache、logs')).toBeInTheDocument()
 		fireEvent.click(screen.getByRole('button', { name: '修复仓库' }))
 
 		await waitFor(() => {
@@ -82,5 +106,25 @@ describe('SettingsPage', () => {
 		expect(useAppStore.getState().repositoryHealthStatus).toBe('healthy')
 		expect(useAppStore.getState().repositoryMissingDirectories).toEqual([])
 		expect(useAppStore.getState().toasts.at(-1)?.title).toBe('仓库修复完成')
+	})
+
+	it('切换到开发诊断分组后仍可触发诊断动作', async () => {
+		writeTestLogMock.mockResolvedValue({
+			logFilePath: '/tmp/logs/app.log',
+			appLogDir: '/tmp/logs',
+			message: 'ok',
+		})
+		startDemoTaskMock.mockResolvedValue(undefined)
+
+		renderPage()
+		fireEvent.click(screen.getByRole('tab', { name: '开发诊断' }))
+
+		fireEvent.click(screen.getByRole('button', { name: '写入测试日志' }))
+		fireEvent.click(screen.getByRole('button', { name: '触发演示任务' }))
+
+		await waitFor(() => {
+			expect(writeTestLogMock).toHaveBeenCalledTimes(1)
+			expect(startDemoTaskMock).toHaveBeenCalledTimes(1)
+		})
 	})
 })

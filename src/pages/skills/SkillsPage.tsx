@@ -1,12 +1,11 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import type { Skill } from '@/lib/tauri/contracts'
+import { usePageHeader } from '@/app/layout/PageHeaderContext'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { PageScaffold } from '@/components/shared/PageScaffold'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { LayoutGrid, List } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import {
 	Select,
@@ -18,11 +17,9 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/stores/app-store'
 
-type ViewMode = 'list' | 'card'
 type DrawerTab = 'overview' | 'readme' | 'targets' | 'version' | 'issues'
 type BadgeTone = 'success' | 'warning' | 'error' | 'info' | 'secondary' | 'outline'
 
@@ -64,11 +61,26 @@ function getStatusTone(status: string): BadgeTone {
 	return 'secondary'
 }
 
-function CompactMetric({ label, value }: { label: string; value: string }) {
+function HeaderMetricPill({
+	testId,
+	label,
+	value,
+	toneClassName,
+}: {
+	testId: string
+	label: string
+	value: string
+	toneClassName: string
+}) {
 	return (
-		<div className='flex items-center gap-2 rounded-xl border border-border/70 bg-background/50 px-3 py-2'>
-			<span className='text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase'>{label}</span>
-			<strong className='text-sm font-semibold text-foreground'>{value}</strong>
+		<div
+			data-testid={testId}
+			className={cn(
+				'inline-flex items-center gap-2 rounded-full border border-(--shell-border-subtle) bg-white/88 px-3.5 py-2 text-sm shadow-(--shadow-pill-flat)',
+				toneClassName,
+			)}>
+			<span className='text-[0.72rem] font-semibold tracking-[0.08em]'>{label}</span>
+			<strong className='text-sm font-semibold'>{value}</strong>
 		</div>
 	)
 }
@@ -297,7 +309,6 @@ export function SkillsPage() {
 	const [sourceFilter, setSourceFilter] = useState('all')
 	const [toolFilter, setToolFilter] = useState('all')
 	const [sortBy, setSortBy] = useState('updatedAt')
-	const [viewMode, setViewMode] = useState<ViewMode>('list')
 	const [selectedIds, setSelectedIds] = useState<string[]>([])
 
 	const metrics = useMemo(() => {
@@ -375,129 +386,112 @@ export function SkillsPage() {
 		)
 	}
 
+	const headerContent = usePageHeader(
+		'我的 Skills',
+		<>
+			<Button
+				type='button'
+				onClick={() => navigate('/install')}>
+				导入 Skill
+			</Button>
+			<Button
+				variant='secondary'
+				type='button'>
+				重新扫描
+			</Button>
+		</>,
+		<div
+			data-testid='skills-header-metrics'
+			className='flex min-w-0 flex-wrap items-center justify-center gap-2'>
+			<HeaderMetricPill
+				testId='skills-header-metric-installed'
+				label='已安装'
+				value={String(metrics.installed)}
+				toneClassName='text-slate-600'
+			/>
+			<HeaderMetricPill
+				testId='skills-header-metric-enabled'
+				label='已启用'
+				value={String(metrics.enabled)}
+				toneClassName='text-emerald-600'
+			/>
+			<HeaderMetricPill
+				testId='skills-header-metric-updates'
+				label='待更新'
+				value={String(metrics.updates)}
+				toneClassName='text-amber-600'
+			/>
+			<HeaderMetricPill
+				testId='skills-header-metric-issues'
+				label='异常'
+				value={String(metrics.issues)}
+				toneClassName='text-rose-600'
+			/>
+		</div>,
+	)
+
 	return (
 		<>
-			<PageScaffold
-				eyebrow='Skills Workbench'
-				title='我的 Skills'
-				description='统一管理当前环境中的 Skills：筛选、更新与异常处理。'
-				contentClassName='py-1 md:py-2'
-				headerDensity='compact'
-				actions={
-					<>
-						<Button
-							type='button'
-							onClick={() => navigate('/install')}>
-							导入 Skill
-						</Button>
-						<Button
-							variant='secondary'
-							type='button'>
-							重新扫描
-						</Button>
-					</>
-				}>
-				<section className='grid gap-2'>
-					<div className='flex flex-wrap items-center justify-start gap-3 rounded-[1.5rem] border border-border/70 bg-card/84 px-4 py-3 shadow-(--shadow-soft)'>
-						<CompactMetric
-							label='已安装'
-							value={String(metrics.installed)}
+			{headerContent}
+			<section className='flex h-full min-h-0 flex-col gap-3 py-1 md:py-2'>
+				<div
+					data-testid='skills-filter-bar'
+					className='shrink-0 rounded-[1.65rem] border border-border/70 bg-white p-3 shadow-none'>
+					<div className='grid gap-2 lg:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,0.92fr))]'>
+						<Input
+							value={searchKeyword}
+							onChange={(event) => setSearchKeyword(event.target.value)}
+							placeholder='搜索 Skills'
 						/>
-						<CompactMetric
-							label='已启用'
-							value={String(metrics.enabled)}
+						<SkillFilterSelect
+							value={statusFilter}
+							onValueChange={setStatusFilter}
+							placeholder='全部状态'
+							items={[
+								{ value: 'all', label: '全部状态' },
+								{ value: 'issues', label: '异常' },
+								{ value: 'updates', label: '待更新' },
+								{ value: 'enabled', label: '已启用' },
+								{ value: 'disabled', label: '未启用' },
+							]}
 						/>
-						<CompactMetric
-							label='待更新'
-							value={String(metrics.updates)}
+						<SkillFilterSelect
+							value={sourceFilter}
+							onValueChange={setSourceFilter}
+							placeholder='全部来源'
+							items={[
+								{ value: 'all', label: '全部来源' },
+								{ value: 'github', label: 'GitHub' },
+								{ value: 'local', label: '本地' },
+							]}
 						/>
-						<CompactMetric
-							label='异常'
-							value={String(metrics.issues)}
+						<SkillFilterSelect
+							value={toolFilter}
+							onValueChange={setToolFilter}
+							placeholder='全部工具'
+							items={[
+								{ value: 'all', label: '全部工具' },
+								...detectedTargets.map((target) => ({
+									value: target.id,
+									label: target.label,
+								})),
+							]}
+						/>
+						<SkillFilterSelect
+							value={sortBy}
+							onValueChange={setSortBy}
+							placeholder='最近更新'
+							items={[
+								{ value: 'updatedAt', label: '最近更新' },
+								{ value: 'name', label: '名称排序' },
+							]}
 						/>
 					</div>
+				</div>
 
-					<Card className='rounded-[1.5rem] border-border/70 bg-card/84 py-3'>
-						<CardContent className='grid gap-2 lg:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,0.92fr))_auto]'>
-							<Input
-								value={searchKeyword}
-								onChange={(event) => setSearchKeyword(event.target.value)}
-								placeholder='搜索 Skills'
-							/>
-							<SkillFilterSelect
-								value={statusFilter}
-								onValueChange={setStatusFilter}
-								placeholder='全部状态'
-								items={[
-									{ value: 'all', label: '全部状态' },
-									{ value: 'issues', label: '异常' },
-									{ value: 'updates', label: '待更新' },
-									{ value: 'enabled', label: '已启用' },
-									{ value: 'disabled', label: '未启用' },
-								]}
-							/>
-							<SkillFilterSelect
-								value={sourceFilter}
-								onValueChange={setSourceFilter}
-								placeholder='全部来源'
-								items={[
-									{ value: 'all', label: '全部来源' },
-									{ value: 'github', label: 'GitHub' },
-									{ value: 'local', label: '本地' },
-								]}
-							/>
-							<SkillFilterSelect
-								value={toolFilter}
-								onValueChange={setToolFilter}
-								placeholder='全部工具'
-								items={[
-									{ value: 'all', label: '全部工具' },
-									...detectedTargets.map((target) => ({
-										value: target.id,
-										label: target.label,
-									})),
-								]}
-							/>
-							<SkillFilterSelect
-								value={sortBy}
-								onValueChange={setSortBy}
-								placeholder='最近更新'
-								items={[
-									{ value: 'updatedAt', label: '最近更新' },
-									{ value: 'name', label: '名称排序' },
-								]}
-							/>
-							<Tabs
-								value={viewMode}
-								onValueChange={(value) => setViewMode(value as ViewMode)}>
-								<TabsList>
-									<TabsTrigger
-										value='list'
-										aria-label='列表视图'
-										className=''>
-										<List
-											size={20}
-											strokeWidth={1.8}
-											className='inline-flex items-center justify-center'
-										/>
-									</TabsTrigger>
-									<TabsTrigger
-										value='card'
-										aria-label='卡片视图'
-										className=''>
-										<LayoutGrid
-											size={20}
-											strokeWidth={1.8}
-											className='inline-flex items-center justify-center'
-										/>
-									</TabsTrigger>
-								</TabsList>
-							</Tabs>
-						</CardContent>
-					</Card>
-
-					{selectedIds.length > 0 ? (
-						<div className='flex flex-wrap items-center gap-2 rounded-2xl border border-info-border bg-info-bg px-4 py-3 text-info shadow-(--shadow-soft)'>
+				{selectedIds.length > 0 ? (
+					<div className='shrink-0 rounded-2xl border border-info-border bg-info-bg px-4 py-3 text-info shadow-(--shadow-soft)'>
+						<div className='flex flex-wrap items-center gap-2'>
 							<strong className='mr-2 text-sm'>已选择 {selectedIds.length} 项</strong>
 							<Button size='sm'>启用</Button>
 							<Button
@@ -516,9 +510,13 @@ export function SkillsPage() {
 								重新检测
 							</Button>
 						</div>
-					) : null}
+					</div>
+				) : null}
 
-					<section className={cn('grid gap-3', viewMode === 'card' ? 'md:grid-cols-2' : undefined)}>
+				<div
+					data-testid='skills-card-list'
+					className='scrollbar-hidden min-h-0 flex-1 overflow-y-auto'>
+					<div className='grid gap-3 pb-1'>
 						{filteredSkills.length === 0 ? (
 							<EmptyState
 								title={skillsLoadStatus === 'loading' ? '正在读取 Skills' : '当前没有符合条件的 Skill'}
@@ -533,7 +531,8 @@ export function SkillsPage() {
 								return (
 									<Card
 										key={skill.id}
-										className='rounded-[1.45rem] bg-card/84'>
+										data-testid={`skill-card-${skill.slug}`}
+										className='rounded-[1.45rem] border-border/70 bg-white shadow-none'>
 										<CardHeader>
 											<div className='flex flex-wrap items-start justify-between gap-3'>
 												<div className='flex items-start gap-3'>
@@ -584,13 +583,13 @@ export function SkillsPage() {
 													}
 												}}>
 												<div className='grid gap-3 sm:grid-cols-3'>
-													<div className='rounded-2xl border border-border/80 bg-muted/38 p-4'>
+													<div className='rounded-2xl border border-border/80 bg-white p-4'>
 														<strong className='text-sm'>来源</strong>
 														<p className='mt-1 text-sm leading-6 text-muted-foreground'>
 															{primarySource?.sourceType ?? skill.installMethod}
 														</p>
 													</div>
-													<div className='rounded-2xl border border-border/80 bg-muted/38 p-4'>
+													<div className='rounded-2xl border border-border/80 bg-white p-4'>
 														<strong className='text-sm'>工具支持</strong>
 														<p className='mt-1 text-sm leading-6 text-muted-foreground'>
 															{skill.supportedTargets.length > 0
@@ -603,7 +602,7 @@ export function SkillsPage() {
 															'rounded-2xl border p-4',
 															metadata.hasIssues
 																? 'border-warning-border bg-warning-bg text-warning'
-																: 'border-border/80 bg-muted/38',
+																: 'border-border/80 bg-white',
 														)}>
 														<strong className='text-sm'>问题摘要</strong>
 														<p
@@ -644,9 +643,9 @@ export function SkillsPage() {
 								)
 							})
 						)}
-					</section>
-				</section>
-			</PageScaffold>
+					</div>
+				</div>
+			</section>
 
 			{selectedSkill ? (
 				<SkillDetailDrawer

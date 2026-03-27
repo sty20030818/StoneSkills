@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-	--font-sans: "Geist", "SF Pro Display", "PingFang SC", "Segoe UI", sans-serif;
+	--font-sans: "SF Pro Display", "PingFang SC", "Geist", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", sans-serif;
 	--font-mono: "JetBrains Mono", "SFMono-Regular", "Consolas", monospace;
 
 	--radius-xs: 0.375rem;
@@ -16,6 +16,19 @@
 
 	--shadow-panel: 0 18px 48px rgba(36, 50, 68, 0.12);
 	--shadow-soft: 0 8px 24px rgba(36, 50, 68, 0.08);
+	--shadow-island-flat: 0 1px 2px rgba(111, 137, 171, 0.08);
+	--shadow-pill-flat: 0 1px 2px rgba(111, 137, 171, 0.08);
+	--shadow-floatbar-flat: 0 1px 2px rgba(111, 137, 171, 0.06);
+	--shadow-island-soft: 0 2px 3px rgba(255, 255, 255, 0.88) inset, 0 12px 28px rgba(111, 137, 171, 0.12);
+	--shadow-island-raised:
+		0 2px 4px rgba(255, 255, 255, 0.92) inset, 0 18px 36px rgba(111, 137, 171, 0.16),
+		0 3px 10px rgba(111, 137, 171, 0.08);
+	--shadow-pill-raised:
+		0 2px 4px rgba(255, 255, 255, 0.96) inset, 0 1px 0 rgba(255, 255, 255, 0.88), 0 20px 36px rgba(111, 137, 171, 0.18),
+		0 6px 16px rgba(111, 137, 171, 0.1);
+	--shadow-floatbar:
+		0 1px 3px rgba(255, 255, 255, 0.82) inset, 0 10px 20px rgba(111, 137, 171, 0.12),
+		0 2px 8px rgba(111, 137, 171, 0.08);
 
 	--color-success: var(--state-success-fg);
 	--color-success-bg: var(--state-success-bg);
@@ -33,7 +46,7 @@
 
 @theme inline {
 	--font-heading: var(--font-sans);
-	--font-sans: "Geist Variable", sans-serif;
+	--font-sans: "SF Pro Display", "PingFang SC", "Geist Variable", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", sans-serif;
 	--color-sidebar-ring: var(--sidebar-ring);
 	--color-sidebar-border: var(--sidebar-border);
 	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -166,6 +179,19 @@
 	--sidebar-border: var(--border-subtle);
 	--sidebar-ring: var(--ice-blue-300);
 	--app-shell-glow: rgba(143, 184, 255, 0.28);
+	--shell-app-bg: #f6faff;
+	--shell-pill-bg: #ffffff;
+	--shell-pill-accent-bg: #f1f7ff;
+	--shell-panel-bg: #fbfdff;
+	--shell-panel-muted-bg: #f1f6fc;
+	--shell-panel-inner-bg: #fbfdff;
+	--shell-panel-hover-bg: #f5f9ff;
+	--shell-nav-active-bg: rgba(143, 184, 255, 0.12);
+	--shell-sidebar-icon-bg: #f8fbff;
+	--shell-floatbar-surface-bg: #f8fbff;
+	--shell-border-subtle: rgba(191, 207, 228, 0.54);
+	--shell-border-soft: rgba(191, 207, 228, 0.92);
+	--shell-highlight-top: rgba(255, 255, 255, 0.32);
 	--status-track-bg: rgba(255, 255, 255, 0.76);
 	--drawer-header-bg: rgba(249, 252, 255, 0.92);
 }
@@ -233,6 +259,29 @@
 	--sidebar-border: var(--border-subtle);
 	--sidebar-ring: #6e9ff0;
 	--app-shell-glow: rgba(110, 159, 240, 0.22);
+	--shadow-island-flat: 0 1px 2px rgba(7, 11, 19, 0.18);
+	--shadow-pill-flat: 0 1px 2px rgba(7, 11, 19, 0.2);
+	--shadow-floatbar-flat: 0 1px 2px rgba(7, 11, 19, 0.16);
+	--shadow-island-soft: 0 1px 2px rgba(255, 255, 255, 0.06) inset, 0 14px 30px rgba(7, 11, 19, 0.24);
+	--shadow-island-raised:
+		0 1px 2px rgba(255, 255, 255, 0.08) inset, 0 20px 42px rgba(7, 11, 19, 0.34), 0 4px 12px rgba(7, 11, 19, 0.18);
+	--shadow-pill-raised:
+		0 1px 2px rgba(255, 255, 255, 0.08) inset, 0 18px 38px rgba(7, 11, 19, 0.32), 0 4px 12px rgba(7, 11, 19, 0.16);
+	--shadow-floatbar:
+		0 1px 2px rgba(255, 255, 255, 0.08) inset, 0 12px 24px rgba(7, 11, 19, 0.28), 0 2px 8px rgba(7, 11, 19, 0.14);
+	--shell-app-bg: #111722;
+	--shell-pill-bg: #1b2533;
+	--shell-pill-accent-bg: #243042;
+	--shell-panel-bg: #1a2331;
+	--shell-panel-muted-bg: #171f2c;
+	--shell-panel-inner-bg: #1c2635;
+	--shell-panel-hover-bg: #202b3a;
+	--shell-nav-active-bg: rgba(158, 194, 255, 0.14);
+	--shell-sidebar-icon-bg: #202b3a;
+	--shell-floatbar-surface-bg: #192332;
+	--shell-border-subtle: rgba(77, 96, 122, 0.52);
+	--shell-border-soft: rgba(77, 96, 122, 0.96);
+	--shell-highlight-top: rgba(255, 255, 255, 0.08);
 	--status-track-bg: rgba(27, 36, 50, 0.82);
 	--drawer-header-bg: rgba(34, 45, 61, 0.94);
 }

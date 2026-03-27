@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { AppRouter } from '@/app/router/AppRouter'
@@ -96,6 +96,8 @@ describe('AppRouter', () => {
 				name: 'AI 工具',
 			}),
 		).toBeInTheDocument()
+		expect(screen.getByTestId('targets-main-card')).toHaveClass('bg-white')
+		expect(screen.getByTestId('targets-main-card')).toHaveClass('shadow-none')
 	})
 
 	it('侧边导航只展示四个正式一级页面', async () => {
@@ -116,8 +118,11 @@ describe('AppRouter', () => {
 		expect(screen.getByRole('link', { name: /设置/i })).toBeInTheDocument()
 		expect(screen.queryByText('总览')).not.toBeInTheDocument()
 		expect(screen.queryByText('更新中心')).not.toBeInTheDocument()
-		expect(screen.getByText('StoneSkills')).toBeInTheDocument()
+		expect(screen.getByText('Stone')).toBeInTheDocument()
+		expect(screen.getByText('Skills')).toBeInTheDocument()
 		expect(screen.getByTestId('sidebar-brand-logo')).toBeInTheDocument()
+		expect(screen.getByTestId('app-brand-island')).toBeInTheDocument()
+		expect(within(screen.getByTestId('app-sidebar')).queryByText('StoneSkills')).not.toBeInTheDocument()
 		expect(screen.queryByText('默认首页与治理工作台')).not.toBeInTheDocument()
 		expect(screen.queryByText('导入来源、检测预览与安装确认')).not.toBeInTheDocument()
 		expect(screen.queryByText('Architecture Shift')).not.toBeInTheDocument()
@@ -134,8 +139,11 @@ describe('AppRouter', () => {
 		const activeLink = await screen.findByRole('link', { name: /我的 Skills/i })
 
 		expect(activeLink).toHaveAttribute('aria-current', 'page')
-		expect(activeLink).toHaveClass('ring-1')
-		expect(activeLink).toHaveClass('hover:bg-background')
+		expect(activeLink).toHaveClass('bg-(--shell-nav-active-bg)')
+		expect(activeLink).toHaveClass('border-(--shell-border-subtle)')
+		expect(activeLink).toHaveClass('min-h-12')
+		expect(activeLink).toHaveClass('text-primary')
+		expect(activeLink).not.toHaveClass('shadow-(--shadow-soft)')
 		expect(activeLink).not.toHaveClass('hover:bg-sidebar-accent')
 	})
 })

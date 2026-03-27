@@ -119,7 +119,7 @@ describe('InstallPage', () => {
 			</MemoryRouter>,
 		)
 
-		fireEvent.change(await screen.findByPlaceholderText('输入 GitHub 仓库 URL'), {
+		fireEvent.change(await screen.findByPlaceholderText('https://github.com/user/repo 或 user/repo'), {
 			target: { value: 'https://github.com/example/skills' },
 		})
 		fireEvent.click(screen.getByRole('button', { name: '识别仓库' }))
@@ -138,7 +138,44 @@ describe('InstallPage', () => {
 		})
 
 		expect(await screen.findByText('导入完成')).toBeInTheDocument()
-		expect(screen.getByRole('link', { name: '去我的 Skills 查看' })).toHaveAttribute('href', '/skills')
+	})
+
+	it('在全局 Header 岛中只展示标题而不重复渲染旧页面头部', async () => {
+		render(
+			<MemoryRouter initialEntries={['/install']}>
+				<AppRouter />
+			</MemoryRouter>,
+		)
+
+		const heading = await screen.findByRole('heading', {
+			level: 1,
+			name: '导入 / 安装',
+		})
+
+		expect(screen.getByTestId('app-header-island')).toContainElement(heading)
+		expect(screen.queryByTestId('page-header')).not.toBeInTheDocument()
+		expect(screen.queryByRole('button', { name: '重新扫描' })).not.toBeInTheDocument()
+		expect(screen.getByPlaceholderText('https://github.com/user/repo 或 user/repo')).toBeInTheDocument()
+		expect(screen.getByTestId('install-main-card')).toBeInTheDocument()
+		expect(screen.getByTestId('install-source-rail')).toBeInTheDocument()
+		expect(screen.getByTestId('install-source-rail')).toHaveClass('bg-white')
+		expect(screen.getByTestId('install-source-rail')).toHaveClass('shadow-none')
+		expect(screen.getByTestId('install-source-rail')).toHaveClass('self-start')
+		expect(screen.getByTestId('install-source-rail')).not.toHaveClass('w-full')
+		expect(screen.getByTestId('install-main-card')).not.toContainElement(screen.getByTestId('install-source-rail'))
+		expect(screen.getByTestId('install-main-card')).toHaveClass('bg-white')
+		expect(screen.getByTestId('install-main-card')).toHaveClass('shadow-none')
+		expect(screen.getByTestId('install-main-body')).not.toHaveClass('pt-4')
+		expect(screen.getByRole('heading', { level: 2, name: 'Git 仓库地址' })).toBeInTheDocument()
+		expect(screen.getByTestId('install-github-input-row')).toHaveClass('grid-cols-[minmax(0,1fr)_auto]')
+		expect(screen.getByText('支持格式：')).toBeInTheDocument()
+		expect(screen.getByText('https://github.com/user/repo 或直接写 user/repo')).toBeInTheDocument()
+		expect(screen.getByText('https://github.com/user/repo/tree/main/skills/my-skill（指定子路径）')).toBeInTheDocument()
+		expect(screen.queryByText('选择来源并识别 Skill')).not.toBeInTheDocument()
+		expect(screen.queryByText('先识别候选 Skill，再补齐字段并确认导入。')).not.toBeInTheDocument()
+		expect(screen.queryByText('GitHub 仓库 URL')).not.toBeInTheDocument()
+		expect(screen.queryByText('导入流程')).not.toBeInTheDocument()
+		expect(screen.queryByText('导入后操作')).not.toBeInTheDocument()
 	})
 
 	it('支持本地目录识别并导入', async () => {
@@ -233,7 +270,7 @@ describe('InstallPage', () => {
 			</MemoryRouter>,
 		)
 
-		fireEvent.change(await screen.findByPlaceholderText('输入 GitHub 仓库 URL'), {
+		fireEvent.change(await screen.findByPlaceholderText('https://github.com/user/repo 或 user/repo'), {
 			target: { value: 'https://github.com/example/broken-skills' },
 		})
 		fireEvent.click(screen.getByRole('button', { name: '识别仓库' }))
@@ -257,7 +294,7 @@ describe('InstallPage', () => {
 			</MemoryRouter>,
 		)
 
-		fireEvent.change(await screen.findByPlaceholderText('输入 GitHub 仓库 URL'), {
+		fireEvent.change(await screen.findByPlaceholderText('https://github.com/user/repo 或 user/repo'), {
 			target: { value: 'https://github.com/example/missing' },
 		})
 		fireEvent.click(screen.getByRole('button', { name: '识别仓库' }))

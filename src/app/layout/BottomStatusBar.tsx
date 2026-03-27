@@ -45,10 +45,10 @@ export function BottomStatusBar() {
 	return (
 		<footer
 			data-testid='bottom-status-bar'
-			className='shrink-0 border-t border-border/70 bg-[var(--status-track-bg)] px-4 py-1.5 backdrop-blur-xl md:px-6'>
+			className='shrink-0 pt-3'>
 			<div
 				data-testid='bottom-status-track'
-				className='flex h-8 flex-wrap items-center gap-x-5 gap-y-1 overflow-hidden text-[11px] text-muted-foreground md:text-xs'>
+				className='relative flex min-h-10.5 flex-wrap items-center gap-x-5 gap-y-1 overflow-hidden rounded-full border border-(--shell-border-subtle) bg-(--shell-floatbar-surface-bg) px-4 py-2 text-[11px] text-muted-foreground shadow-(--shadow-floatbar-flat) md:px-5 md:text-xs'>
 				<div className='flex items-center gap-2 whitespace-nowrap'>
 					<strong className='text-foreground'>Skills 总数</strong>
 					<span>{skills.length}</span>
