@@ -8,6 +8,7 @@ import type {
 	Installation,
 	LogWritePayload,
 	RepositoryStatus,
+	SkillImportPreview,
 	Skill,
 	SystemInfo,
 	Target,
@@ -73,6 +74,54 @@ export function getRepositoryStatus() {
 
 export function repairRepository() {
 	return callCommand<RepositoryStatus>('repair_repository')
+}
+
+export function inspectGithubRepository(url: string) {
+	return callCommand<SkillImportPreview>('inspect_github_repository', {
+		input: { url },
+	})
+}
+
+export function inspectLocalDirectory(path: string) {
+	return callCommand<SkillImportPreview>('inspect_local_directory', {
+		input: { path },
+	})
+}
+
+export function importGithubSkill(input: {
+	url: string
+	relativePath: string
+	slugOverride?: string | null
+	nameOverride?: string | null
+	descriptionOverride?: string | null
+}) {
+	return callCommand<Skill>('import_github_skill', {
+		input: {
+			url: input.url,
+			relativePath: input.relativePath,
+			slugOverride: input.slugOverride ?? null,
+			nameOverride: input.nameOverride ?? null,
+			descriptionOverride: input.descriptionOverride ?? null,
+		},
+	})
+}
+
+export function importLocalSkill(input: {
+	path: string
+	relativePath: string
+	slugOverride?: string | null
+	nameOverride?: string | null
+	descriptionOverride?: string | null
+}) {
+	return callCommand<Skill>('import_local_skill', {
+		input: {
+			path: input.path,
+			relativePath: input.relativePath,
+			slugOverride: input.slugOverride ?? null,
+			nameOverride: input.nameOverride ?? null,
+			descriptionOverride: input.descriptionOverride ?? null,
+		},
+	})
 }
 
 export function setAppSetting(key: string, valueJson: unknown) {

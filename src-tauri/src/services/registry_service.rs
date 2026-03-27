@@ -3,16 +3,14 @@ use uuid::Uuid;
 
 use crate::app::errors::AppError;
 use crate::models::domain::{
-    DetectStatus, HealthStatus, InstallationRecord, InstallationStatus, InstallMode, SkillAggregate,
-    SkillRecord, SkillSourceRecord, SkillStatus, SkillTargetSupportRecord, SourceType,
-    SupportLevel, TargetRecord,
+    DetectStatus, HealthStatus, InstallMode, InstallationRecord, InstallationStatus,
+    SkillAggregate, SkillRecord, SkillSourceRecord, SkillStatus, SkillTargetSupportRecord,
+    SourceType, SupportLevel, TargetRecord,
 };
 use crate::models::dto::{
-    CreateSkillInputDto, UpsertInstallationInputDto, UpdateSkillInputDto, UpsertTargetInputDto,
+    CreateSkillInputDto, UpdateSkillInputDto, UpsertInstallationInputDto, UpsertTargetInputDto,
 };
-use crate::repositories::{
-    installations_repository, skills_repository, targets_repository,
-};
+use crate::repositories::{installations_repository, skills_repository, targets_repository};
 
 pub fn list_skills(connection: &Connection) -> Result<Vec<SkillAggregate>, AppError> {
     skills_repository::list_skill_records(connection)?
@@ -56,16 +54,29 @@ pub fn create_skill(
     skills_repository::replace_skill_target_supports(&transaction, &skill_id, &supports)?;
     transaction.commit()?;
 
-    get_skill(connection, &skill_id)?
-        .ok_or_else(|| AppError::new("db/not-found", "创建 Skill 后未能读取回显", Some(skill_id), true))
+    get_skill(connection, &skill_id)?.ok_or_else(|| {
+        AppError::new(
+            "db/not-found",
+            "创建 Skill 后未能读取回显",
+            Some(skill_id),
+            true,
+        )
+    })
 }
 
 pub fn update_skill(
     connection: &mut Connection,
     input: UpdateSkillInputDto,
 ) -> Result<SkillAggregate, AppError> {
-    let existing = skills_repository::get_skill_record(connection, &input.id)?
-        .ok_or_else(|| AppError::new("db/not-found", "找不到要更新的 Skill", Some(input.id.clone()), true))?;
+    let existing =
+        skills_repository::get_skill_record(connection, &input.id)?.ok_or_else(|| {
+            AppError::new(
+                "db/not-found",
+                "找不到要更新的 Skill",
+                Some(input.id.clone()),
+                true,
+            )
+        })?;
 
     let skill = build_skill_record(
         input.id.clone(),
@@ -96,8 +107,14 @@ pub fn update_skill(
     skills_repository::replace_skill_target_supports(&transaction, &input.id, &supports)?;
     transaction.commit()?;
 
-    get_skill(connection, &input.id)?
-        .ok_or_else(|| AppError::new("db/not-found", "更新 Skill 后未能读取回显", Some(input.id), true))
+    get_skill(connection, &input.id)?.ok_or_else(|| {
+        AppError::new(
+            "db/not-found",
+            "更新 Skill 后未能读取回显",
+            Some(input.id),
+            true,
+        )
+    })
 }
 
 pub fn delete_skill(connection: &mut Connection, skill_id: &str) -> Result<(), AppError> {
@@ -107,7 +124,10 @@ pub fn delete_skill(connection: &mut Connection, skill_id: &str) -> Result<(), A
     Ok(())
 }
 
-pub fn get_skill(connection: &Connection, skill_id: &str) -> Result<Option<SkillAggregate>, AppError> {
+pub fn get_skill(
+    connection: &Connection,
+    skill_id: &str,
+) -> Result<Option<SkillAggregate>, AppError> {
     skills_repository::get_skill_record(connection, skill_id)?
         .map(|skill| hydrate_skill(connection, skill))
         .transpose()
@@ -344,7 +364,10 @@ mod tests {
         let loaded = get_skill(&reopened, &created.skill.id).expect("load skill");
 
         assert!(loaded.is_some());
-        assert_eq!(loaded.expect("skill aggregate").skill.slug, "frontend-guard");
+        assert_eq!(
+            loaded.expect("skill aggregate").skill.slug,
+            "frontend-guard"
+        );
 
         let _ = std::fs::remove_file(path);
     }
@@ -389,7 +412,10 @@ mod tests {
         .expect("update skill");
 
         assert_eq!(updated.skill.name, "Frontend Guard Updated");
-        assert_eq!(updated.tags, vec!["frontend".to_string(), "quality".to_string()]);
+        assert_eq!(
+            updated.tags,
+            vec!["frontend".to_string(), "quality".to_string()]
+        );
         assert_eq!(updated.supported_targets.len(), 1);
         assert_eq!(updated.skill.updated_at >= now_ts() - 2, true);
 

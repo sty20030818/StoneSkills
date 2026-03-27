@@ -2,17 +2,21 @@ use tauri::{AppHandle, State};
 use tokio::time::{sleep, Duration};
 
 use crate::app::{errors::AppError, events, state::AppState};
+use crate::database::connection;
 use crate::models::{
     dto::{
         AppSettingDto, AppSettingsSnapshotDto, BootstrapPayloadDto, CreateSkillInputDto,
-        DeleteAckDto, DemoTaskAckDto, InstallationDto, RepositoryStatusDto, SetAppSettingInputDto,
-        SkillDto, TargetDto, TaskEventPayload, UpdateSkillInputDto, UpsertInstallationInputDto,
-        UpsertTargetInputDto,
+        DeleteAckDto, DemoTaskAckDto, ImportGithubSkillInputDto, ImportLocalSkillInputDto,
+        InspectGithubRepositoryInputDto, InspectLocalDirectoryInputDto, InstallationDto,
+        RepositoryStatusDto, SetAppSettingInputDto, SkillDto, SkillImportPreviewDto, TargetDto,
+        TaskEventPayload, UpdateSkillInputDto, UpsertInstallationInputDto, UpsertTargetInputDto,
     },
     result::ApiResponse,
 };
-use crate::database::connection;
-use crate::services::{log_service, registry_service, repository_service, settings_service, system_service};
+use crate::services::{
+    log_service, registry_service, repository_service, settings_service, skill_install_service,
+    system_service,
+};
 
 #[tauri::command]
 pub fn bootstrap_app(
@@ -234,6 +238,122 @@ pub fn get_repository_status(app: AppHandle) -> ApiResponse<RepositoryStatusDto>
 pub fn repair_repository(app: AppHandle) -> ApiResponse<RepositoryStatusDto> {
     match repository_service::repair_repository(&app) {
         Ok(status) => ApiResponse::success(status.into()),
+        Err(error) => ApiResponse::failure(error),
+    }
+}
+
+#[tauri::command]
+pub fn inspect_github_repository(
+    app: AppHandle,
+    input: InspectGithubRepositoryInputDto,
+) -> ApiResponse<SkillImportPreviewDto> {
+    let connection = match connection::open_app_database(&app) {
+        Ok(connection) => connection,
+        Err(error) => return ApiResponse::failure(error),
+    };
+    let repository_root = match repository_service::default_repository_root(&app) {
+        Ok(path) => path,
+        Err(error) => return ApiResponse::failure(error),
+    };
+
+    match skill_install_service::inspect_github_repository(
+        &connection,
+        &repository_root,
+        &input.url,
+    ) {
+        Ok(candidates) => ApiResponse::success(SkillImportPreviewDto {
+            source_type: "github".to_string(),
+            source_label: input.url,
+            candidates: candidates.into_iter().map(Into::into).collect(),
+        }),
+        Err(error) => ApiResponse::failure(error),
+    }
+}
+
+#[tauri::command]
+pub fn inspect_local_directory(
+    app: AppHandle,
+    input: InspectLocalDirectoryInputDto,
+) -> ApiResponse<SkillImportPreviewDto> {
+    let connection = match connection::open_app_database(&app) {
+        Ok(connection) => connection,
+        Err(error) => return ApiResponse::failure(error),
+    };
+    let repository_root = match repository_service::default_repository_root(&app) {
+        Ok(path) => path,
+        Err(error) => return ApiResponse::failure(error),
+    };
+
+    match skill_install_service::inspect_source_directory(
+        &connection,
+        &repository_root,
+        std::path::Path::new(&input.path),
+    ) {
+        Ok(candidates) => ApiResponse::success(SkillImportPreviewDto {
+            source_type: "local".to_string(),
+            source_label: input.path,
+            candidates: candidates.into_iter().map(Into::into).collect(),
+        }),
+        Err(error) => ApiResponse::failure(error),
+    }
+}
+
+#[tauri::command]
+pub fn import_github_skill(
+    app: AppHandle,
+    input: ImportGithubSkillInputDto,
+) -> ApiResponse<SkillDto> {
+    let mut connection = match connection::open_app_database(&app) {
+        Ok(connection) => connection,
+        Err(error) => return ApiResponse::failure(error),
+    };
+    let repository_root = match repository_service::default_repository_root(&app) {
+        Ok(path) => path,
+        Err(error) => return ApiResponse::failure(error),
+    };
+
+    match skill_install_service::import_github_candidate(
+        &mut connection,
+        &repository_root,
+        &input.url,
+        &input.relative_path,
+        crate::services::skill_install_service::SkillImportOverrides {
+            slug: input.slug_override,
+            name: input.name_override,
+            description: input.description_override,
+        },
+    ) {
+        Ok(skill) => ApiResponse::success(skill.into()),
+        Err(error) => ApiResponse::failure(error),
+    }
+}
+
+#[tauri::command]
+pub fn import_local_skill(
+    app: AppHandle,
+    input: ImportLocalSkillInputDto,
+) -> ApiResponse<SkillDto> {
+    let mut connection = match connection::open_app_database(&app) {
+        Ok(connection) => connection,
+        Err(error) => return ApiResponse::failure(error),
+    };
+    let repository_root = match repository_service::default_repository_root(&app) {
+        Ok(path) => path,
+        Err(error) => return ApiResponse::failure(error),
+    };
+
+    match skill_install_service::import_local_candidate(
+        &mut connection,
+        &repository_root,
+        std::path::Path::new(&input.path),
+        &input.relative_path,
+        crate::services::skill_install_service::SkillImportOverrides {
+            slug: input.slug_override,
+            name: input.name_override,
+            description: input.description_override,
+        },
+    ) {
+        Ok(skill) => ApiResponse::success(skill.into()),
         Err(error) => ApiResponse::failure(error),
     }
 }

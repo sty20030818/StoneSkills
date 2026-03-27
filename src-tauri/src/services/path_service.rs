@@ -7,12 +7,22 @@ use crate::models::dto::AppPathsDto;
 
 pub fn get_app_paths(app: &AppHandle) -> Result<AppPathsDto, AppError> {
     let path = app.path();
-    let app_data_dir = path
-        .app_data_dir()
-        .map_err(|error| AppError::new("system/path-app-data", "无法解析应用数据目录", Some(error.to_string()), true))?;
-    let app_log_dir = path
-        .app_log_dir()
-        .map_err(|error| AppError::new("system/path-app-log", "无法解析日志目录", Some(error.to_string()), true))?;
+    let app_data_dir = path.app_data_dir().map_err(|error| {
+        AppError::new(
+            "system/path-app-data",
+            "无法解析应用数据目录",
+            Some(error.to_string()),
+            true,
+        )
+    })?;
+    let app_log_dir = path.app_log_dir().map_err(|error| {
+        AppError::new(
+            "system/path-app-log",
+            "无法解析日志目录",
+            Some(error.to_string()),
+            true,
+        )
+    })?;
     let suggested_repository_dir = get_home_dir(app)?.join(".stoneskills");
 
     Ok(AppPathsDto {
@@ -23,9 +33,14 @@ pub fn get_app_paths(app: &AppHandle) -> Result<AppPathsDto, AppError> {
 }
 
 pub fn get_home_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
-    app.path()
-        .home_dir()
-        .map_err(|error| AppError::new("system/path-home", "无法解析用户主目录", Some(error.to_string()), true))
+    app.path().home_dir().map_err(|error| {
+        AppError::new(
+            "system/path-home",
+            "无法解析用户主目录",
+            Some(error.to_string()),
+            true,
+        )
+    })
 }
 
 pub fn get_database_path(app: &AppHandle) -> Result<PathBuf, AppError> {

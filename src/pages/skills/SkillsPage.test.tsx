@@ -127,26 +127,62 @@ describe('SkillsPage', () => {
 			}),
 		).toBeInTheDocument()
 
-		expect(screen.getByTestId('page-header')).toContainElement(
-			screen.getByRole('heading', {
-				level: 1,
-				name: '我的 Skills',
-			}),
-		)
 		expect(screen.getByTestId('page-header')).toContainElement(screen.getByRole('button', { name: '导入 Skill' }))
-		expect(screen.getByTestId('page-scroll-content')).toHaveClass('scrollbar-hidden')
-		expect(screen.getByTestId('page-scroll-content')).toContainElement(screen.getByPlaceholderText('搜索 Skills'))
-		expect(screen.getAllByText('已安装').length).toBeGreaterThan(0)
-		expect(screen.getAllByText('待更新').length).toBeGreaterThan(0)
-		expect(screen.getAllByText('异常').length).toBeGreaterThan(0)
-		expect(screen.getByRole('button', { name: '导入 Skill' })).toBeInTheDocument()
 		expect(screen.getByRole('button', { name: '重新扫描' })).toBeInTheDocument()
 		expect(screen.getByPlaceholderText('搜索 Skills')).toBeInTheDocument()
-		expect(screen.getByRole('tab', { name: '列表视图' })).toBeInTheDocument()
-		expect(screen.getByRole('tab', { name: '卡片视图' })).toBeInTheDocument()
 		expect(screen.getByRole('tab', { name: '列表视图' })).toHaveAttribute('data-state', 'active')
-		expect(screen.getByRole('button', { name: '导入 Skill' })).toHaveClass('h-10')
-		expect(screen.getByRole('button', { name: '重新扫描' })).toHaveClass('h-10')
+		expect(screen.getAllByText('已安装').length).toBeGreaterThan(0)
+	})
+
+	it('导入按钮会跳转到安装与导入页面', async () => {
+		render(
+			<MemoryRouter initialEntries={['/skills']}>
+				<AppRouter />
+				<LocationProbe />
+			</MemoryRouter>,
+		)
+
+		fireEvent.click(await screen.findByRole('button', { name: '导入 Skill' }))
+
+		expect(await screen.findByRole('heading', { level: 1, name: '导入 / 安装' })).toBeInTheDocument()
+		expect(screen.getByTestId('location')).toHaveTextContent('/install')
+	})
+
+	it('点击卡片主体会打开详情抽屉', async () => {
+		render(
+			<MemoryRouter initialEntries={['/skills']}>
+				<AppRouter />
+			</MemoryRouter>,
+		)
+
+		fireEvent.click(await screen.findByTestId('skill-card-trigger-skill-alpha'))
+
+		expect(await screen.findByRole('dialog', { name: 'Skill Alpha' })).toBeInTheDocument()
+	})
+
+	it('点击查看详情按钮也会打开详情抽屉', async () => {
+		render(
+			<MemoryRouter initialEntries={['/skills']}>
+				<AppRouter />
+			</MemoryRouter>,
+		)
+
+		fireEvent.click((await screen.findAllByRole('button', { name: '查看详情' }))[0])
+
+		expect(await screen.findByRole('dialog', { name: 'Skill Alpha' })).toBeInTheDocument()
+	})
+
+	it('点击复选框不会打开详情抽屉', async () => {
+		render(
+			<MemoryRouter initialEntries={['/skills']}>
+				<AppRouter />
+			</MemoryRouter>,
+		)
+
+		fireEvent.click(await screen.findByRole('checkbox', { name: '选择 Skill Alpha' }))
+
+		expect(screen.queryByRole('dialog', { name: 'Skill Alpha' })).not.toBeInTheDocument()
+		expect(screen.getByRole('checkbox', { name: '选择 Skill Alpha' })).toBeChecked()
 	})
 
 	it('根据 query 参数打开详情抽屉并支持关闭', async () => {

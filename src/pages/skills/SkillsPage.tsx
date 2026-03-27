@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import type { Skill } from '@/lib/tauri/contracts'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { PageScaffold } from '@/components/shared/PageScaffold'
@@ -287,6 +287,7 @@ function SkillDetailDrawer({
 }
 
 export function SkillsPage() {
+	const navigate = useNavigate()
 	const skills = useAppStore((state) => state.skills)
 	const skillsLoadStatus = useAppStore((state) => state.skillsLoadStatus)
 	const detectedTargets = useAppStore((state) => state.detectedTargets)
@@ -384,8 +385,16 @@ export function SkillsPage() {
 				headerDensity='compact'
 				actions={
 					<>
-						<Button>导入 Skill</Button>
-						<Button variant='secondary'>重新扫描</Button>
+						<Button
+							type='button'
+							onClick={() => navigate('/install')}>
+							导入 Skill
+						</Button>
+						<Button
+							variant='secondary'
+							type='button'>
+							重新扫描
+						</Button>
 					</>
 				}>
 				<section className='grid gap-2'>
@@ -531,6 +540,7 @@ export function SkillsPage() {
 													<input
 														type='checkbox'
 														checked={selected}
+														onClick={(event) => event.stopPropagation()}
 														onChange={() => toggleSelection(skill.id)}
 														aria-label={`选择 ${skill.name}`}
 														className='mt-1 size-4 rounded border-border bg-background text-primary'
@@ -550,63 +560,84 @@ export function SkillsPage() {
 												<Button
 													variant='ghost'
 													size='sm'
-													onClick={() => openSkillDrawer(skill, 'overview')}>
+													onClick={(event) => {
+														event.stopPropagation()
+														openSkillDrawer(skill, 'overview')
+													}}>
 													查看详情
 												</Button>
 											</div>
 										</CardHeader>
 
-										<CardContent className='grid gap-4'>
-											<div className='grid gap-3 sm:grid-cols-3'>
-												<div className='rounded-2xl border border-border/80 bg-muted/38 p-4'>
-													<strong className='text-sm'>来源</strong>
-													<p className='mt-1 text-sm leading-6 text-muted-foreground'>
-														{primarySource?.sourceType ?? skill.installMethod}
-													</p>
-												</div>
-												<div className='rounded-2xl border border-border/80 bg-muted/38 p-4'>
-													<strong className='text-sm'>工具支持</strong>
-													<p className='mt-1 text-sm leading-6 text-muted-foreground'>
-														{skill.supportedTargets.length > 0
-															? skill.supportedTargets.map((item) => item.targetKey).join('、')
-															: '尚未声明'}
-													</p>
-												</div>
-												<div
-													className={cn(
-														'rounded-2xl border p-4',
-														metadata.hasIssues
-															? 'border-warning-border bg-warning-bg text-warning'
-															: 'border-border/80 bg-muted/38',
-													)}>
-													<strong className='text-sm'>问题摘要</strong>
-													<p
+										<CardContent className='pt-0'>
+											<div
+												role='button'
+												tabIndex={0}
+												data-testid={`skill-card-trigger-${skill.slug}`}
+												aria-label={`打开 ${skill.name} 详情`}
+												className='grid gap-4 rounded-[1.2rem] p-1 text-left transition-colors outline-none hover:bg-muted/24 focus-visible:ring-3 focus-visible:ring-ring/25'
+												onClick={() => openSkillDrawer(skill, 'overview')}
+												onKeyDown={(event) => {
+													if (event.key === 'Enter' || event.key === ' ') {
+														event.preventDefault()
+														openSkillDrawer(skill, 'overview')
+													}
+												}}>
+												<div className='grid gap-3 sm:grid-cols-3'>
+													<div className='rounded-2xl border border-border/80 bg-muted/38 p-4'>
+														<strong className='text-sm'>来源</strong>
+														<p className='mt-1 text-sm leading-6 text-muted-foreground'>
+															{primarySource?.sourceType ?? skill.installMethod}
+														</p>
+													</div>
+													<div className='rounded-2xl border border-border/80 bg-muted/38 p-4'>
+														<strong className='text-sm'>工具支持</strong>
+														<p className='mt-1 text-sm leading-6 text-muted-foreground'>
+															{skill.supportedTargets.length > 0
+																? skill.supportedTargets.map((item) => item.targetKey).join('、')
+																: '尚未声明'}
+														</p>
+													</div>
+													<div
 														className={cn(
-															'mt-1 text-sm leading-6',
-															metadata.hasIssues ? 'text-warning/90' : 'text-muted-foreground',
+															'rounded-2xl border p-4',
+															metadata.hasIssues
+																? 'border-warning-border bg-warning-bg text-warning'
+																: 'border-border/80 bg-muted/38',
 														)}>
-														{metadata.hasIssues ? '存在异常或兼容性提示' : '当前未发现显著问题'}
-													</p>
+														<strong className='text-sm'>问题摘要</strong>
+														<p
+															className={cn(
+																'mt-1 text-sm leading-6',
+																metadata.hasIssues ? 'text-warning/90' : 'text-muted-foreground',
+															)}>
+															{metadata.hasIssues ? '存在异常或兼容性提示' : '当前未发现显著问题'}
+														</p>
+													</div>
 												</div>
-											</div>
-											<div className='flex flex-wrap items-center justify-between gap-3'>
 												<p className='text-sm leading-6 text-muted-foreground'>
 													标签：{skill.tags.length > 0 ? skill.tags.join('、') : '暂无'}
 												</p>
-												<div className='flex gap-2'>
-													<Button
-														variant='outline'
-														size='sm'
-														onClick={() => openSkillDrawer(skill, 'overview')}>
-														查看详情
-													</Button>
-													<Button
-														variant='ghost'
-														size='sm'
-														onClick={() => openSkillDrawer(skill, 'issues')}>
-														查看问题
-													</Button>
-												</div>
+											</div>
+											<div className='flex justify-end gap-2 pt-3'>
+												<Button
+													variant='outline'
+													size='sm'
+													onClick={(event) => {
+														event.stopPropagation()
+														openSkillDrawer(skill, 'overview')
+													}}>
+													查看详情
+												</Button>
+												<Button
+													variant='ghost'
+													size='sm'
+													onClick={(event) => {
+														event.stopPropagation()
+														openSkillDrawer(skill, 'issues')
+													}}>
+													查看问题
+												</Button>
 											</div>
 										</CardContent>
 									</Card>

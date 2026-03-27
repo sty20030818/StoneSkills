@@ -118,6 +118,24 @@ export interface RepositoryStatus {
 	message: string | null
 }
 
+export interface SkillImportCandidate {
+	relativePath: string
+	slug: string
+	name: string
+	description: string | null
+	author: string | null
+	version: string
+	readmePath: string | null
+	missingFields: string[]
+	conflicts: string[]
+}
+
+export interface SkillImportPreview {
+	sourceType: 'github' | 'local'
+	sourceLabel: string
+	candidates: SkillImportCandidate[]
+}
+
 export interface LogWritePayload {
 	logFilePath: string
 	lineCount: number

@@ -8,10 +8,7 @@ use crate::app::errors::AppError;
 use crate::models::dto::{AppPathsDto, LogWritePayloadDto};
 use crate::services::{fs_service, path_service};
 
-pub fn write_test_log(
-    app: &AppHandle,
-    line_count: u64,
-) -> Result<LogWritePayloadDto, AppError> {
+pub fn write_test_log(app: &AppHandle, line_count: u64) -> Result<LogWritePayloadDto, AppError> {
     let paths = path_service::get_app_paths(app)?;
     let log_dir = fs_service::ensure_dir(paths.app_log_dir.clone())?;
     let log_file_path = ensure_log_file(log_dir)?;

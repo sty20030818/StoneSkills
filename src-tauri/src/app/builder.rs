@@ -34,6 +34,10 @@ pub fn build_app() -> tauri::Builder<tauri::Wry> {
             app::set_app_setting,
             app::get_repository_status,
             app::repair_repository,
+            app::inspect_github_repository,
+            app::inspect_local_directory,
+            app::import_github_skill,
+            app::import_local_skill,
             system::get_system_info,
             system::get_app_paths,
             logs::write_test_log

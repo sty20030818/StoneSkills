@@ -4,6 +4,7 @@ use crate::models::domain::{
     AppSettingRecord, AppSettingsSnapshot, InstallationRecord, SkillAggregate, SkillSourceRecord,
     SkillTargetSupportRecord, TargetRecord,
 };
+use crate::services::skill_install_service::SkillImportCandidate;
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -245,6 +246,60 @@ pub struct RepositoryStatusDto {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct SkillImportCandidateDto {
+    pub relative_path: String,
+    pub slug: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub author: Option<String>,
+    pub version: String,
+    pub readme_path: Option<String>,
+    pub missing_fields: Vec<String>,
+    pub conflicts: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SkillImportPreviewDto {
+    pub source_type: String,
+    pub source_label: String,
+    pub candidates: Vec<SkillImportCandidateDto>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InspectGithubRepositoryInputDto {
+    pub url: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InspectLocalDirectoryInputDto {
+    pub path: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImportGithubSkillInputDto {
+    pub url: String,
+    pub relative_path: String,
+    pub slug_override: Option<String>,
+    pub name_override: Option<String>,
+    pub description_override: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImportLocalSkillInputDto {
+    pub path: String,
+    pub relative_path: String,
+    pub slug_override: Option<String>,
+    pub name_override: Option<String>,
+    pub description_override: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SetAppSettingInputDto {
     pub key: String,
     pub value_json: serde_json::Value,
@@ -297,7 +352,11 @@ impl From<SkillAggregate> for SkillDto {
             extra_metadata_json: value.skill.extra_metadata_json,
             tags: value.tags,
             sources: value.sources.into_iter().map(Into::into).collect(),
-            supported_targets: value.supported_targets.into_iter().map(Into::into).collect(),
+            supported_targets: value
+                .supported_targets
+                .into_iter()
+                .map(Into::into)
+                .collect(),
             created_at: value.skill.created_at,
             updated_at: value.skill.updated_at,
             last_checked_at: value.skill.last_checked_at,
@@ -355,7 +414,9 @@ impl From<AppSettingsSnapshot> for AppSettingsSnapshotDto {
     fn from(value: AppSettingsSnapshot) -> Self {
         Self {
             repository_root: value.repository_root,
-            default_install_mode: value.default_install_mode.map(|mode| mode.as_str().to_string()),
+            default_install_mode: value
+                .default_install_mode
+                .map(|mode| mode.as_str().to_string()),
             auto_check_updates: value.auto_check_updates,
             github_token: value.github_token,
             scan_paths: value.scan_paths,
@@ -372,6 +433,22 @@ impl From<crate::services::repository_service::RepositoryStatus> for RepositoryS
             missing_directories: value.missing_directories,
             writable: value.writable,
             message: value.message,
+        }
+    }
+}
+
+impl From<SkillImportCandidate> for SkillImportCandidateDto {
+    fn from(value: SkillImportCandidate) -> Self {
+        Self {
+            relative_path: value.relative_path,
+            slug: value.slug,
+            name: value.name,
+            description: value.description,
+            author: value.author,
+            version: value.version,
+            readme_path: value.readme_path.map(|path| path.display().to_string()),
+            missing_fields: value.missing_fields,
+            conflicts: value.conflicts,
         }
     }
 }

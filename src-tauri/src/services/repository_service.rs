@@ -7,7 +7,8 @@ use crate::app::errors::AppError;
 use crate::services::path_service;
 
 pub const REPOSITORY_DIR_NAME: &str = ".stoneskills";
-pub const STANDARD_DIRECTORIES: [&str; 6] = ["skills", "backups", "cache", "temp", "logs", "manifests"];
+pub const STANDARD_DIRECTORIES: [&str; 6] =
+    ["skills", "backups", "cache", "temp", "logs", "manifests"];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RepositoryHealthStatus {
@@ -36,7 +37,9 @@ impl RepositoryHealthStatus {
 }
 
 pub fn default_repository_root(app: &AppHandle) -> Result<PathBuf, AppError> {
-    Ok(default_repository_root_from_home(&path_service::get_home_dir(app)?))
+    Ok(default_repository_root_from_home(
+        &path_service::get_home_dir(app)?,
+    ))
 }
 
 pub fn get_repository_status(app: &AppHandle) -> Result<RepositoryStatus, AppError> {
@@ -180,8 +183,9 @@ mod tests {
     use tempfile::TempDir;
 
     use super::{
-        REPOSITORY_DIR_NAME, RepositoryHealthStatus, STANDARD_DIRECTORIES, check_repository_health_at,
-        default_repository_root_from_home, ensure_repository_initialized_at, repair_repository_at,
+        check_repository_health_at, default_repository_root_from_home,
+        ensure_repository_initialized_at, repair_repository_at, RepositoryHealthStatus,
+        REPOSITORY_DIR_NAME, STANDARD_DIRECTORIES,
     };
 
     #[test]
@@ -246,6 +250,9 @@ mod tests {
         let status = check_repository_health_at(&root).expect("check health");
 
         assert_eq!(status.status, RepositoryHealthStatus::Broken);
-        assert_eq!(status.message, Some("仓库路径被文件占用，无法作为目录使用".to_string()));
+        assert_eq!(
+            status.message,
+            Some("仓库路径被文件占用，无法作为目录使用".to_string())
+        );
     }
 }
