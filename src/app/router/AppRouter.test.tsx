@@ -32,6 +32,7 @@ const baseState = {
 		githubToken: null,
 		scanPaths: ['/tmp/repo'],
 		logLevel: 'info',
+		recentGithubRepositories: [],
 	},
 }
 

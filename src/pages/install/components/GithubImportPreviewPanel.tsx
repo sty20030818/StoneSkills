@@ -19,8 +19,7 @@ interface GithubImportPreviewPanelProps {
 }
 
 function formatCandidateReason(candidate: SkillImportCandidate) {
-	const missingFieldText =
-		candidate.missingFields.length > 0 ? `缺失字段 ${candidate.missingFields.join('、')}` : null
+	const missingFieldText = candidate.missingFields.length > 0 ? `缺失字段 ${candidate.missingFields.join('、')}` : null
 	const conflictText = candidate.conflicts.length > 0 ? candidate.conflicts.join('；') : null
 
 	return [missingFieldText, conflictText].filter(Boolean).join('；') || null
@@ -119,7 +118,7 @@ export function GithubImportPreviewPanel({
 				</CardContent>
 				<div
 					data-testid='github-import-preview-actions'
-					className='shrink-0 flex items-center justify-end gap-3 px-4 pb-3'>
+					className='shrink-0 flex items-center justify-end gap-3 px-4'>
 					<Button
 						type='button'
 						variant='outline'

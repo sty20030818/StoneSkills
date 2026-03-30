@@ -11,12 +11,14 @@ const {
 	inspectGithubRepositoryMock,
 	inspectLocalDirectoryMock,
 	listSkillsMock,
+	setAppSettingMock,
 } = vi.hoisted(() => ({
 	importGithubSkillMock: vi.fn(),
 	importLocalSkillMock: vi.fn(),
 	inspectGithubRepositoryMock: vi.fn(),
 	inspectLocalDirectoryMock: vi.fn(),
 	listSkillsMock: vi.fn(),
+	setAppSettingMock: vi.fn(),
 }))
 
 vi.mock('@/lib/tauri/commands', async () => {
@@ -29,6 +31,7 @@ vi.mock('@/lib/tauri/commands', async () => {
 		inspectGithubRepository: inspectGithubRepositoryMock,
 		inspectLocalDirectory: inspectLocalDirectoryMock,
 		listSkills: listSkillsMock,
+		setAppSetting: setAppSettingMock,
 	}
 })
 
@@ -39,6 +42,12 @@ describe('InstallPage', () => {
 		inspectGithubRepositoryMock.mockReset()
 		inspectLocalDirectoryMock.mockReset()
 		listSkillsMock.mockReset()
+		setAppSettingMock.mockReset()
+		setAppSettingMock.mockResolvedValue({
+			key: 'recent_github_repositories',
+			valueJson: [],
+			updatedAt: 1,
+		})
 
 		useAppStore.setState({
 			bootstrapStatus: 'ready',
@@ -69,6 +78,7 @@ describe('InstallPage', () => {
 				githubToken: null,
 				scanPaths: ['/tmp/repo'],
 				logLevel: 'info',
+				recentGithubRepositories: [],
 			},
 		})
 	})
@@ -152,6 +162,7 @@ describe('InstallPage', () => {
 		})
 
 		await screen.findByRole('button', { name: '返回' })
+		expect(screen.queryByTestId('github-import-history-card')).not.toBeInTheDocument()
 		expect(screen.queryByTestId('install-github-input-row')).not.toBeInTheDocument()
 		expect(screen.queryByTestId('install-main-card')).not.toBeInTheDocument()
 		expect(screen.getByTestId('install-page-shell')).toHaveClass('overflow-hidden')
@@ -217,6 +228,162 @@ describe('InstallPage', () => {
 		})
 	})
 
+	it('GitHub 输入态会显示历史卡片并支持回车提交', async () => {
+		useAppStore.setState({
+			settingsSnapshot: {
+				repositoryRoot: '/tmp/repo',
+				defaultInstallMode: 'symlink',
+				autoCheckUpdates: true,
+				githubToken: null,
+				scanPaths: ['/tmp/repo'],
+				logLevel: 'info',
+				recentGithubRepositories: ['https://github.com/antfu/skills'],
+			},
+		})
+		inspectGithubRepositoryMock.mockResolvedValue({
+			sourceType: 'github',
+			sourceLabel: 'https://github.com/example/skills',
+			candidates: [],
+		})
+
+		render(
+			<MemoryRouter initialEntries={['/install']}>
+				<AppRouter />
+			</MemoryRouter>,
+		)
+
+		expect(await screen.findByTestId('github-import-history-card')).toHaveClass('flex-1')
+		expect(screen.getByTestId('github-import-history-card')).toHaveClass('min-h-0')
+		expect(screen.getByTestId('github-import-history-list-shell')).toHaveClass('overflow-y-auto')
+		expect(screen.getByTestId('install-github-entry-stage')).toBeInTheDocument()
+		expect(screen.getByTestId('github-import-entry-card')).toBeInTheDocument()
+		expect(screen.queryByTestId('install-main-card')).not.toBeInTheDocument()
+		expect(screen.getByTestId('github-import-entry-card')).not.toContainElement(screen.getByTestId('github-import-history-card'))
+		expect(screen.getByText('https://github.com/antfu/skills')).toBeInTheDocument()
+
+		const input = screen.getByPlaceholderText('https://github.com/user/repo 或 user/repo')
+		fireEvent.change(input, {
+			target: { value: 'https://github.com/example/skills' },
+		})
+		fireEvent.keyDown(input, {
+			key: 'Enter',
+			code: 'Enter',
+		})
+
+		await waitFor(() => {
+			expect(inspectGithubRepositoryMock).toHaveBeenCalledWith('https://github.com/example/skills')
+		})
+	})
+
+	it('输入为空时按回车不会触发识别', async () => {
+		render(
+			<MemoryRouter initialEntries={['/install']}>
+				<AppRouter />
+			</MemoryRouter>,
+		)
+
+		fireEvent.keyDown(await screen.findByPlaceholderText('https://github.com/user/repo 或 user/repo'), {
+			key: 'Enter',
+			code: 'Enter',
+		})
+
+		expect(inspectGithubRepositoryMock).not.toHaveBeenCalled()
+	})
+
+	it('点击历史仓库会覆盖输入框并直接触发识别', async () => {
+		useAppStore.setState({
+			settingsSnapshot: {
+				repositoryRoot: '/tmp/repo',
+				defaultInstallMode: 'symlink',
+				autoCheckUpdates: true,
+				githubToken: null,
+				scanPaths: ['/tmp/repo'],
+				logLevel: 'info',
+				recentGithubRepositories: ['https://github.com/antfu/skills'],
+			},
+		})
+		inspectGithubRepositoryMock.mockResolvedValue({
+			sourceType: 'github',
+			sourceLabel: 'https://github.com/antfu/skills',
+			candidates: [],
+		})
+
+		render(
+			<MemoryRouter initialEntries={['/install']}>
+				<AppRouter />
+			</MemoryRouter>,
+		)
+
+		fireEvent.click(await screen.findByRole('button', { name: 'https://github.com/antfu/skills' }))
+
+		await waitFor(() => {
+			expect(screen.getByDisplayValue('https://github.com/antfu/skills')).toBeInTheDocument()
+			expect(inspectGithubRepositoryMock).toHaveBeenCalledWith('https://github.com/antfu/skills')
+		})
+	})
+
+	it('GitHub 识别成功后会写入去重后的历史记录', async () => {
+		useAppStore.setState({
+			settingsSnapshot: {
+				repositoryRoot: '/tmp/repo',
+				defaultInstallMode: 'symlink',
+				autoCheckUpdates: true,
+				githubToken: null,
+				scanPaths: ['/tmp/repo'],
+				logLevel: 'info',
+				recentGithubRepositories: ['https://github.com/example/skills'],
+			},
+		})
+		inspectGithubRepositoryMock.mockResolvedValue({
+			sourceType: 'github',
+			sourceLabel: 'example/skills',
+			candidates: [],
+		})
+
+		render(
+			<MemoryRouter initialEntries={['/install']}>
+				<AppRouter />
+			</MemoryRouter>,
+		)
+
+		fireEvent.change(await screen.findByPlaceholderText('https://github.com/user/repo 或 user/repo'), {
+			target: { value: 'example/skills' },
+		})
+		fireEvent.click(screen.getByRole('button', { name: '识别仓库' }))
+
+		await screen.findByRole('button', { name: '返回' })
+		expect(setAppSettingMock).toHaveBeenCalledWith('recent_github_repositories', [
+			'https://github.com/example/skills',
+		])
+
+		fireEvent.click(screen.getByRole('button', { name: '返回' }))
+		const historyItems = screen.getAllByRole('button', { name: 'https://github.com/example/skills' })
+		expect(historyItems).toHaveLength(1)
+	})
+
+	it('GitHub 识别失败时不会写入历史记录', async () => {
+		inspectGithubRepositoryMock.mockRejectedValue({
+			code: 'install/github-fetch-failed',
+			message: '无法获取 GitHub 仓库内容',
+			details: null,
+			recoverable: true,
+		})
+
+		render(
+			<MemoryRouter initialEntries={['/install']}>
+				<AppRouter />
+			</MemoryRouter>,
+		)
+
+		fireEvent.change(await screen.findByPlaceholderText('https://github.com/user/repo 或 user/repo'), {
+			target: { value: 'https://github.com/example/missing' },
+		})
+		fireEvent.click(screen.getByRole('button', { name: '识别仓库' }))
+
+		expect(await screen.findByText('导入预览失败')).toBeInTheDocument()
+		expect(setAppSettingMock).not.toHaveBeenCalled()
+	})
+
 	it('在全局 Header 岛中只展示标题而不重复渲染旧页面头部', async () => {
 		render(
 			<MemoryRouter initialEntries={['/install']}>
@@ -233,7 +400,9 @@ describe('InstallPage', () => {
 		expect(screen.queryByTestId('page-header')).not.toBeInTheDocument()
 		expect(screen.queryByRole('button', { name: '重新扫描' })).not.toBeInTheDocument()
 		expect(screen.getByPlaceholderText('https://github.com/user/repo 或 user/repo')).toBeInTheDocument()
-		expect(screen.getByTestId('install-main-card')).toBeInTheDocument()
+		expect(screen.getByTestId('install-github-entry-stage')).toBeInTheDocument()
+		expect(screen.getByTestId('github-import-entry-card')).toBeInTheDocument()
+		expect(screen.getByTestId('github-import-history-card')).toBeInTheDocument()
 		expect(screen.getByTestId('install-source-rail')).toBeInTheDocument()
 		expect(screen.getByTestId('install-source-rail')).toHaveClass('bg-white')
 		expect(screen.getByTestId('install-source-rail')).toHaveClass('shadow-none')
@@ -241,10 +410,8 @@ describe('InstallPage', () => {
 		expect(screen.getByTestId('install-source-rail')).not.toHaveClass('w-full')
 		expect(screen.getByTestId('install-page-shell')).not.toHaveClass('py-1')
 		expect(screen.getByTestId('install-page-shell')).not.toHaveClass('md:py-2')
-		expect(screen.getByTestId('install-main-card')).not.toContainElement(screen.getByTestId('install-source-rail'))
-		expect(screen.getByTestId('install-main-card')).toHaveClass('bg-white')
-		expect(screen.getByTestId('install-main-card')).toHaveClass('shadow-none')
-		expect(screen.getByTestId('install-main-body')).not.toHaveClass('pt-4')
+		expect(screen.queryByTestId('install-main-card')).not.toBeInTheDocument()
+		expect(screen.getByTestId('github-import-entry-card')).not.toContainElement(screen.getByTestId('install-source-rail'))
 		expect(screen.getByRole('heading', { level: 2, name: 'Git 仓库地址' })).toBeInTheDocument()
 		expect(screen.getByTestId('install-github-input-row')).toHaveClass('grid-cols-[minmax(0,1fr)_auto]')
 		expect(screen.getByText('支持格式：')).toBeInTheDocument()

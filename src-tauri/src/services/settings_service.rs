@@ -12,6 +12,7 @@ pub const AUTO_CHECK_UPDATES_KEY: &str = "auto_check_updates";
 pub const GITHUB_TOKEN_KEY: &str = "github_token";
 pub const SCAN_PATHS_KEY: &str = "scan_paths";
 pub const LOG_LEVEL_KEY: &str = "log_level";
+pub const RECENT_GITHUB_REPOSITORIES_KEY: &str = "recent_github_repositories";
 
 pub fn ensure_default_settings(
     connection: &rusqlite::Connection,
@@ -50,6 +51,12 @@ pub fn ensure_default_settings(
         &serde_json::Value::String("info".to_string()),
         now,
     )?;
+    settings_repository::set_setting_if_missing(
+        connection,
+        RECENT_GITHUB_REPOSITORIES_KEY,
+        &serde_json::Value::Array(vec![]),
+        now,
+    )?;
 
     Ok(())
 }
@@ -66,6 +73,8 @@ pub fn get_settings_snapshot(
         github_token: read_string_setting(connection, GITHUB_TOKEN_KEY)?,
         scan_paths: read_string_array_setting(connection, SCAN_PATHS_KEY)?.unwrap_or_default(),
         log_level: read_string_setting(connection, LOG_LEVEL_KEY)?,
+        recent_github_repositories: read_string_array_setting(connection, RECENT_GITHUB_REPOSITORIES_KEY)?
+            .unwrap_or_default(),
     })
 }
 

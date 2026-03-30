@@ -232,6 +232,7 @@ pub struct AppSettingsSnapshotDto {
     pub github_token: Option<String>,
     pub scan_paths: Vec<String>,
     pub log_level: Option<String>,
+    pub recent_github_repositories: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -421,6 +422,7 @@ impl From<AppSettingsSnapshot> for AppSettingsSnapshotDto {
             github_token: value.github_token,
             scan_paths: value.scan_paths,
             log_level: value.log_level,
+            recent_github_repositories: value.recent_github_repositories,
         }
     }
 }

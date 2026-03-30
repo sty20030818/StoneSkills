@@ -173,4 +173,5 @@ pub struct AppSettingsSnapshot {
     pub github_token: Option<String>,
     pub scan_paths: Vec<String>,
     pub log_level: Option<String>,
+    pub recent_github_repositories: Vec<String>,
 }

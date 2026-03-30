@@ -109,6 +109,7 @@ describe('SkillsPage', () => {
 				githubToken: null,
 				scanPaths: ['/tmp/repo'],
 				logLevel: 'info',
+				recentGithubRepositories: [],
 			},
 		})
 	})

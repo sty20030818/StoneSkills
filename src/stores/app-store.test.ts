@@ -93,6 +93,7 @@ describe('useAppStore', () => {
 			githubToken: null,
 			scanPaths: [],
 			logLevel: 'info',
+			recentGithubRepositories: [],
 		})
 
 		expect(useAppStore.getState().skills).toHaveLength(1)

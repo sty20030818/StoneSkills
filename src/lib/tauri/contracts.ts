@@ -102,6 +102,7 @@ export interface AppSettingsSnapshot {
 	githubToken: string | null
 	scanPaths: string[]
 	logLevel: string | null
+	recentGithubRepositories: string[]
 }
 
 export interface AppSetting {

@@ -7,6 +7,7 @@ import {
 	inspectGithubRepository,
 	inspectLocalDirectory,
 	listSkills,
+	setAppSetting,
 } from '@/lib/tauri/commands'
 import { normalizeCommandError } from '@/lib/tauri/errors'
 import { usePageHeader } from '@/app/layout/PageHeaderContext'
@@ -18,11 +19,14 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { GithubImportEntry } from '@/pages/install/components/GithubImportEntry'
+import { GithubImportHistoryPanel } from '@/pages/install/components/GithubImportHistoryPanel'
 import { GithubImportPreviewPanel } from '@/pages/install/components/GithubImportPreviewPanel'
+import { mergeRecentGithubRepositories } from '@/pages/install/lib/github-repository-history'
 import { useAppStore } from '@/stores/app-store'
 
 type InstallSource = 'github' | 'local'
 type InstallingMode = 'all' | 'selected' | null
+const RECENT_GITHUB_REPOSITORIES_KEY = 'recent_github_repositories'
 
 function normalizeOverrideValue(value: string, fallback: string | null) {
 	const trimmed = value.trim()
@@ -132,6 +136,8 @@ export function InstallPage() {
 	const setSkillsReady = useAppStore((state) => state.setSkillsReady)
 	const setSkillsError = useAppStore((state) => state.setSkillsError)
 	const pushToast = useAppStore((state) => state.pushToast)
+	const settingsSnapshot = useAppStore((state) => state.settingsSnapshot)
+	const setSettingsReady = useAppStore((state) => state.setSettingsReady)
 
 	const [sourceType, setSourceType] = useState<InstallSource>('github')
 	const [githubUrl, setGithubUrl] = useState('')
@@ -144,11 +150,17 @@ export function InstallPage() {
 	const [installingMode, setInstallingMode] = useState<InstallingMode>(null)
 	const [successMessage, setSuccessMessage] = useState<string | null>(null)
 	const [isBackButtonHovered, setIsBackButtonHovered] = useState(false)
+	const [recentGithubRepositories, setRecentGithubRepositories] = useState<string[]>([])
 	const backIconRef = useRef<ArrowLeftIconHandle>(null)
 
 	const activeSourceValue = sourceType === 'github' ? githubUrl : localPath
 	const headerContent = usePageHeader('导入 / 安装')
 	const isGithubPreviewActive = sourceType === 'github' && preview?.sourceType === 'github'
+	const isGithubEntryActive = sourceType === 'github' && preview === null
+
+	useEffect(() => {
+		setRecentGithubRepositories(settingsSnapshot?.recentGithubRepositories ?? [])
+	}, [settingsSnapshot?.recentGithubRepositories])
 
 	useEffect(() => {
 		if (isBackButtonHovered) {
@@ -169,7 +181,32 @@ export function InstallPage() {
 		setIsBackButtonHovered(false)
 	}
 
-	const handleInspect = async () => {
+	const handlePersistRecentGithubRepositories = (nextRepositories: string[]) => {
+		if (settingsSnapshot) {
+			setSettingsReady({
+				...settingsSnapshot,
+				recentGithubRepositories: nextRepositories,
+			})
+		}
+
+		void setAppSetting(RECENT_GITHUB_REPOSITORIES_KEY, nextRepositories).catch((error) => {
+			const normalized = normalizeCommandError(error)
+			pushToast({
+				title: '历史记录保存失败',
+				description: normalized.message,
+			})
+		})
+	}
+
+	const handleInspect = async (overrides?: { githubUrl?: string; localPath?: string }) => {
+		const githubSourceValue = (overrides?.githubUrl ?? githubUrl).trim()
+		const localSourceValue = (overrides?.localPath ?? localPath).trim()
+		const sourceValue = sourceType === 'github' ? githubSourceValue : localSourceValue
+
+		if (sourceValue.length === 0 || previewing) {
+			return
+		}
+
 		flushSync(() => {
 			setPreviewing(true)
 			setPreviewError(null)
@@ -182,11 +219,17 @@ export function InstallPage() {
 		try {
 			const nextPreview =
 				sourceType === 'github'
-					? await inspectGithubRepository(githubUrl.trim())
-					: await inspectLocalDirectory(localPath.trim())
+					? await inspectGithubRepository(githubSourceValue)
+					: await inspectLocalDirectory(localSourceValue)
 
 			setPreview(nextPreview)
 			setSelectedCandidateKeys([])
+
+			if (sourceType === 'github') {
+				const nextRepositories = mergeRecentGithubRepositories(recentGithubRepositories, githubSourceValue)
+				setRecentGithubRepositories(nextRepositories)
+				handlePersistRecentGithubRepositories(nextRepositories)
+			}
 		} catch (error) {
 			const normalized = normalizeCommandError(error)
 			setPreviewError(normalized.message)
@@ -341,16 +384,21 @@ export function InstallPage() {
 		setIsBackButtonHovered(false)
 	}
 
+	const handleSelectRecentGithubRepository = (repository: string) => {
+		setGithubUrl(repository)
+		void handleInspect({ githubUrl: repository })
+	}
+
 	return (
 		<>
 			{headerContent}
 			<div
 				data-testid='install-page-shell'
-				className={`scrollbar-hidden h-full ${isGithubPreviewActive ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+				className={`scrollbar-hidden h-full ${isGithubPreviewActive || isGithubEntryActive ? 'overflow-hidden' : 'overflow-y-auto'}`}>
 				<Tabs
 					value={sourceType}
 					onValueChange={(value) => handleSourceTypeChange(value as InstallSource)}
-					className={`flex flex-col gap-3 ${isGithubPreviewActive ? 'h-full min-h-0' : ''}`}>
+					className={`flex flex-col gap-3 ${isGithubPreviewActive || isGithubEntryActive ? 'h-full min-h-0' : ''}`}>
 					<div
 						data-testid='install-source-controls'
 						className='flex flex-wrap items-center gap-3'>
@@ -420,6 +468,45 @@ export function InstallPage() {
 								}}
 							/>
 						</div>
+					) : isGithubEntryActive ? (
+						<div
+							data-testid='install-github-entry-stage'
+							className='flex min-h-0 flex-1 flex-col gap-3'>
+							{previewError ? (
+								<Alert variant='destructive'>
+									<AlertTitle>导入预览失败</AlertTitle>
+									<AlertDescription>{previewError}</AlertDescription>
+								</Alert>
+							) : null}
+
+							{successMessage ? (
+								<Alert>
+									<AlertTitle>导入完成</AlertTitle>
+									<AlertDescription>{successMessage}</AlertDescription>
+								</Alert>
+							) : null}
+
+							<Card
+								data-testid='github-import-entry-card'
+								className='shrink-0 rounded-[1.9rem] border-border/70 bg-white shadow-none'>
+								<CardContent className='grid gap-3'>
+									<GithubImportEntry
+										value={githubUrl}
+										loading={previewing}
+										onChange={setGithubUrl}
+										onSubmit={() => {
+											void handleInspect()
+										}}
+									/>
+								</CardContent>
+							</Card>
+
+							<GithubImportHistoryPanel
+								repositories={recentGithubRepositories}
+								disabled={previewing}
+								onSelect={handleSelectRecentGithubRepository}
+							/>
+						</div>
 					) : (
 						<Card
 							data-testid='install-main-card'
@@ -427,33 +514,26 @@ export function InstallPage() {
 							<CardContent
 								data-testid='install-main-body'
 								className='grid gap-6'>
-								{sourceType === 'github' ? (
-									<GithubImportEntry
-										value={githubUrl}
-										loading={previewing}
-										onChange={setGithubUrl}
-										onSubmit={handleInspect}
-									/>
-								) : (
-									<div className='grid gap-3'>
-										<label className='grid gap-2 text-sm'>
-											<span className='font-medium text-foreground'>本地 Skill 目录</span>
-											<Input
-												value={localPath}
-												onChange={(event) => setLocalPath(event.target.value)}
-												placeholder='输入本地 Skill 目录'
-											/>
-										</label>
-										<div className='flex justify-end'>
-											<Button
-												type='button'
-												disabled={previewing || localPath.trim().length === 0}
-												onClick={handleInspect}>
-												{previewing ? '识别中...' : '识别目录'}
-											</Button>
-										</div>
+								<div className='grid gap-3'>
+									<label className='grid gap-2 text-sm'>
+										<span className='font-medium text-foreground'>本地 Skill 目录</span>
+										<Input
+											value={localPath}
+											onChange={(event) => setLocalPath(event.target.value)}
+											placeholder='输入本地 Skill 目录'
+										/>
+									</label>
+									<div className='flex justify-end'>
+										<Button
+											type='button'
+											disabled={previewing || localPath.trim().length === 0}
+											onClick={() => {
+												void handleInspect()
+											}}>
+											{previewing ? '识别中...' : '识别目录'}
+										</Button>
 									</div>
-								)}
+								</div>
 
 								{previewError ? (
 									<Alert variant='destructive'>

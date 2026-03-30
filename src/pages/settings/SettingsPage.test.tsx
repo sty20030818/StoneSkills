@@ -37,6 +37,7 @@ describe('SettingsPage', () => {
 				githubToken: null,
 				scanPaths: [],
 				logLevel: 'info',
+				recentGithubRepositories: [],
 			},
 			bootstrapPayload: {
 				system: {

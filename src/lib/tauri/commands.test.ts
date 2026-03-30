@@ -68,6 +68,7 @@ describe('tauri commands', () => {
 				githubToken: null,
 				scanPaths: [],
 				logLevel: 'info',
+				recentGithubRepositories: [],
 			},
 			error: null,
 		})
