@@ -3,6 +3,9 @@
 	"plugins": ["react", "vitest"],
 	"categories": {},
 	"rules": {},
+	"options": {
+		"denyWarnings": true
+	},
 	"settings": {
 		"jsx-a11y": {
 			"components": {},
@@ -36,10 +39,14 @@
 	"globals": {},
 	"ignorePatterns": [
 		".codex/**",
+		".git/**",
 		"dist/**",
+		"bun.lock*",
+		"tsconfig*.tsbuildinfo",
 		"node_modules/**",
 		"src-tauri/**",
 		"Document/**",
-		"openspec/**"
+		"openspec/**",
+		".DS_Store"
 	]
 }

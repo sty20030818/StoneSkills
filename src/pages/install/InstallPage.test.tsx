@@ -258,7 +258,9 @@ describe('InstallPage', () => {
 		expect(screen.getByTestId('install-github-entry-stage')).toBeInTheDocument()
 		expect(screen.getByTestId('github-import-entry-card')).toBeInTheDocument()
 		expect(screen.queryByTestId('install-main-card')).not.toBeInTheDocument()
-		expect(screen.getByTestId('github-import-entry-card')).not.toContainElement(screen.getByTestId('github-import-history-card'))
+		expect(screen.getByTestId('github-import-entry-card')).not.toContainElement(
+			screen.getByTestId('github-import-history-card'),
+		)
 		expect(screen.getByText('https://github.com/antfu/skills')).toBeInTheDocument()
 
 		const input = screen.getByPlaceholderText('https://github.com/user/repo 或 user/repo')
@@ -352,9 +354,7 @@ describe('InstallPage', () => {
 		fireEvent.click(screen.getByRole('button', { name: '识别仓库' }))
 
 		await screen.findByRole('button', { name: '返回' })
-		expect(setAppSettingMock).toHaveBeenCalledWith('recent_github_repositories', [
-			'https://github.com/example/skills',
-		])
+		expect(setAppSettingMock).toHaveBeenCalledWith('recent_github_repositories', ['https://github.com/example/skills'])
 
 		fireEvent.click(screen.getByRole('button', { name: '返回' }))
 		const historyItems = screen.getAllByRole('button', { name: 'https://github.com/example/skills' })
@@ -411,7 +411,9 @@ describe('InstallPage', () => {
 		expect(screen.getByTestId('install-page-shell')).not.toHaveClass('py-1')
 		expect(screen.getByTestId('install-page-shell')).not.toHaveClass('md:py-2')
 		expect(screen.queryByTestId('install-main-card')).not.toBeInTheDocument()
-		expect(screen.getByTestId('github-import-entry-card')).not.toContainElement(screen.getByTestId('install-source-rail'))
+		expect(screen.getByTestId('github-import-entry-card')).not.toContainElement(
+			screen.getByTestId('install-source-rail'),
+		)
 		expect(screen.getByRole('heading', { level: 2, name: 'Git 仓库地址' })).toBeInTheDocument()
 		expect(screen.getByTestId('install-github-input-row')).toHaveClass('grid-cols-[minmax(0,1fr)_auto]')
 		expect(screen.getByText('支持格式：')).toBeInTheDocument()

@@ -7,10 +7,7 @@ const startAnimation = vi.fn()
 const stopAnimation = vi.fn()
 
 vi.mock('@/lib/constants/navigation', () => {
-	const MockIcon = React.forwardRef(function MockIcon(
-		props: React.HTMLAttributes<HTMLDivElement>,
-		ref,
-	) {
+	const MockIcon = React.forwardRef(function MockIcon(props: React.HTMLAttributes<HTMLDivElement>, ref) {
 		useImperativeHandle(ref, () => ({
 			startAnimation,
 			stopAnimation,

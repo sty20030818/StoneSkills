@@ -7,10 +7,7 @@ import { cn } from '@/lib/utils'
 
 const Tabs = TabsPrimitive.Root
 
-function TabsList({
-	className,
-	...props
-}: React.ComponentProps<typeof TabsPrimitive.List>) {
+function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.List>) {
 	return (
 		<TabsPrimitive.List
 			data-slot='tabs-list'
@@ -23,10 +20,7 @@ function TabsList({
 	)
 }
 
-function TabsTrigger({
-	className,
-	...props
-}: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
+function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
 	return (
 		<TabsPrimitive.Trigger
 			data-slot='tabs-trigger'
@@ -39,17 +33,11 @@ function TabsTrigger({
 	)
 }
 
-function TabsContent({
-	className,
-	...props
-}: React.ComponentProps<typeof TabsPrimitive.Content>) {
+function TabsContent({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Content>) {
 	return (
 		<TabsPrimitive.Content
 			data-slot='tabs-content'
-			className={cn(
-				'mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-0',
-				className,
-			)}
+			className={cn('mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-0', className)}
 			{...props}
 		/>
 	)

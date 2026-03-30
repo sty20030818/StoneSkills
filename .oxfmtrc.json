@@ -19,11 +19,15 @@
 	"jsxSingleQuote": true,
 	"ignorePatterns": [
 		".codex/**",
+		".git/**",
 		"dist/**",
+		"bun.lock*",
+		"tsconfig*.tsbuildinfo",
 		"node_modules/**",
 		"src-tauri/**",
 		"Document/**",
-		"openspec/**"
+		"openspec/**",
+		".DS_Store"
 	],
 	"overrides": [
 		{

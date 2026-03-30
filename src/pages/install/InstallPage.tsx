@@ -305,13 +305,14 @@ export function InstallPage() {
 
 		const candidateKey = getCandidateKey(candidate)
 		setSelectedCandidateKeys((current) =>
-			current.includes(candidateKey)
-				? current.filter((item) => item !== candidateKey)
-				: [...current, candidateKey],
+			current.includes(candidateKey) ? current.filter((item) => item !== candidateKey) : [...current, candidateKey],
 		)
 	}
 
-	const handleInstallGithubCandidates = async (candidates: SkillImportCandidate[], mode: Exclude<InstallingMode, null>) => {
+	const handleInstallGithubCandidates = async (
+		candidates: SkillImportCandidate[],
+		mode: Exclude<InstallingMode, null>,
+	) => {
 		if (candidates.length === 0) {
 			return
 		}
@@ -340,7 +341,9 @@ export function InstallPage() {
 			pushToast({
 				title: '导入完成',
 				description:
-					candidates.length === 1 ? `${candidates[0].name} 已加入我的 Skills。` : `已完成 ${candidates.length} 个 Skill 的导入。`,
+					candidates.length === 1
+						? `${candidates[0].name} 已加入我的 Skills。`
+						: `已完成 ${candidates.length} 个 Skill 的导入。`,
 			})
 		} catch (error) {
 			const normalized = normalizeCommandError(error)

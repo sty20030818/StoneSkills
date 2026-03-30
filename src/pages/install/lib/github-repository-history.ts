@@ -44,5 +44,8 @@ export function mergeRecentGithubRepositories(current: string[], nextValue: stri
 		return current
 	}
 
-	return [normalizedNextValue, ...current.filter((item) => normalizeGithubRepositoryHistoryEntry(item) !== normalizedNextValue)].slice(0, HISTORY_LIMIT)
+	return [
+		normalizedNextValue,
+		...current.filter((item) => normalizeGithubRepositoryHistoryEntry(item) !== normalizedNextValue),
+	].slice(0, HISTORY_LIMIT)
 }

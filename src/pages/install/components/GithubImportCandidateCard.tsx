@@ -34,12 +34,18 @@ export function GithubImportCandidateCard({
 				disabled
 					? 'cursor-not-allowed border-border/60 bg-muted/25 text-muted-foreground opacity-70'
 					: 'cursor-pointer border-border/70 hover:border-primary/35 hover:bg-primary/4',
-				selected ? 'border-primary bg-primary/6 shadow-[0_0_0_1px_color-mix(in_oklab,var(--color-primary)_24%,transparent)]' : '',
+				selected
+					? 'border-primary bg-primary/6 shadow-[0_0_0_1px_color-mix(in_oklab,var(--color-primary)_24%,transparent)]'
+					: '',
 			)}>
 			<div className='flex items-start justify-between gap-3'>
 				<div className='space-y-2'>
 					<h3 className='line-clamp-1 text-lg font-semibold tracking-[-0.03em] text-foreground'>{candidate.name}</h3>
-					<p className={cn('line-clamp-3 text-sm leading-6', disabled ? 'text-muted-foreground' : 'text-muted-foreground')}>
+					<p
+						className={cn(
+							'line-clamp-3 text-sm leading-6',
+							disabled ? 'text-muted-foreground' : 'text-muted-foreground',
+						)}>
 						{candidate.description ?? '当前候选项缺少描述信息。'}
 					</p>
 				</div>

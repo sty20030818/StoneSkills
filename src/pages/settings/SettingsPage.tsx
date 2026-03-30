@@ -181,8 +181,8 @@ export function SettingsPage() {
 												{tag}
 											</Badge>
 										</div>
-										))}
-									</div>
+									))}
+								</div>
 							</TabsContent>
 
 							<TabsContent
@@ -205,7 +205,10 @@ export function SettingsPage() {
 										</div>
 										<div className='mt-3 grid gap-2 text-sm text-muted-foreground'>
 											<p>可写状态：{repositoryWritable == null ? '未知' : repositoryWritable ? '可写' : '不可写'}</p>
-											<p>缺失目录：{repositoryMissingDirectories.length > 0 ? repositoryMissingDirectories.join('、') : '无'}</p>
+											<p>
+												缺失目录：
+												{repositoryMissingDirectories.length > 0 ? repositoryMissingDirectories.join('、') : '无'}
+											</p>
 										</div>
 									</div>
 									<div className='flex flex-wrap gap-2'>

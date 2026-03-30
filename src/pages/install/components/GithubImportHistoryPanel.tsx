@@ -7,11 +7,7 @@ interface GithubImportHistoryPanelProps {
 	onSelect: (repository: string) => void
 }
 
-export function GithubImportHistoryPanel({
-	repositories,
-	disabled,
-	onSelect,
-}: GithubImportHistoryPanelProps) {
+export function GithubImportHistoryPanel({ repositories, disabled, onSelect }: GithubImportHistoryPanelProps) {
 	return (
 		<Card
 			data-testid='github-import-history-card'
