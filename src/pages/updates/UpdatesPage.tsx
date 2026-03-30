@@ -8,7 +8,7 @@ export function UpdatesPage() {
 	return (
 		<>
 			{headerContent}
-			<section className='scrollbar-hidden h-full overflow-y-auto py-1 md:py-2'>
+			<section className='scrollbar-hidden h-full overflow-y-auto'>
 				<div className='grid gap-4 2xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.95fr)]'>
 				<EmptyState
 					title='更新列表尚未接线'

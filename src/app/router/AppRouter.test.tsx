@@ -96,6 +96,8 @@ describe('AppRouter', () => {
 				name: 'AI 工具',
 			}),
 		).toBeInTheDocument()
+		expect(screen.getByTestId('targets-page-body')).not.toHaveClass('py-1')
+		expect(screen.getByTestId('targets-page-body')).not.toHaveClass('md:py-2')
 		expect(screen.getByTestId('targets-main-card')).toHaveClass('bg-white')
 		expect(screen.getByTestId('targets-main-card')).toHaveClass('shadow-none')
 	})

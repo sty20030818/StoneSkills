@@ -60,7 +60,7 @@ export function DashboardPage() {
 			{headerContent}
 			{bootstrapStatus === 'loading' ? <LoadingState /> : null}
 			{bootstrapStatus === 'error' && bootstrapError ? <ErrorState error={bootstrapError} /> : null}
-			<section className='scrollbar-hidden h-full overflow-y-auto py-1 md:py-2'>
+			<section className='scrollbar-hidden h-full overflow-y-auto'>
 				<div className='grid gap-4 2xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.9fr)]'>
 					<Card className='border-border/70 shadow-sm'>
 						<CardHeader>

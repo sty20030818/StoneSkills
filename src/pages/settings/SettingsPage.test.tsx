@@ -75,6 +75,8 @@ describe('SettingsPage', () => {
 		expect(screen.getByTestId('settings-tab-rail')).toHaveClass('shadow-none')
 		expect(screen.getByTestId('settings-tab-rail')).not.toHaveClass('w-full')
 		expect(screen.getByTestId('settings-tab-rail')).toHaveClass('self-start')
+		expect(screen.getByTestId('settings-page-shell')).not.toHaveClass('py-1')
+		expect(screen.getByTestId('settings-page-shell')).not.toHaveClass('md:py-2')
 		expect(screen.getByTestId('settings-panel-card')).toBeInTheDocument()
 		expect(screen.getByTestId('settings-panel-card')).toHaveClass('bg-white')
 		expect(screen.getByTestId('settings-panel-card')).toHaveClass('shadow-none')

@@ -26,7 +26,7 @@ export function TargetsPage() {
 			{headerContent}
 			<div
 				data-testid='targets-page-body'
-				className='scrollbar-hidden h-full overflow-y-auto py-1 md:py-2'>
+				className='scrollbar-hidden h-full overflow-y-auto'>
 				<Card
 					data-testid='targets-main-card'
 					className='rounded-[1.8rem] border-border/70 bg-white shadow-none'>

@@ -129,6 +129,8 @@ describe('SkillsPage', () => {
 		expect(screen.queryByTestId('page-header')).not.toBeInTheDocument()
 		expect(screen.getByRole('button', { name: '导入 Skill' })).toBeInTheDocument()
 		expect(screen.getByRole('button', { name: '重新扫描' })).toBeInTheDocument()
+		expect(screen.getByTestId('skills-page-shell')).not.toHaveClass('py-1')
+		expect(screen.getByTestId('skills-page-shell')).not.toHaveClass('md:py-2')
 		expect(screen.getByTestId('skills-header-metrics')).toBeInTheDocument()
 		expect(screen.getByTestId('skills-header-metric-installed')).toHaveTextContent('已安装')
 		expect(screen.getByTestId('skills-header-metric-enabled')).toHaveTextContent('已启用')

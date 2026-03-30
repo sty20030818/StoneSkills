@@ -433,7 +433,9 @@ export function SkillsPage() {
 	return (
 		<>
 			{headerContent}
-			<section className='flex h-full min-h-0 flex-col gap-3 py-1 md:py-2'>
+			<section
+				data-testid='skills-page-shell'
+				className='flex h-full min-h-0 flex-col gap-3'>
 				<div
 					data-testid='skills-filter-bar'
 					className='shrink-0 rounded-[1.65rem] border border-border/70 bg-white p-3 shadow-none'>

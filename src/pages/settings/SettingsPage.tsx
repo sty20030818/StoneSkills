@@ -81,7 +81,9 @@ export function SettingsPage() {
 	return (
 		<>
 			{headerContent}
-			<div className='flex h-full min-h-0 flex-col gap-3 py-1 md:py-2'>
+			<div
+				data-testid='settings-page-shell'
+				className='flex h-full min-h-0 flex-col gap-3'>
 				<Tabs
 					value={activeTab}
 					onValueChange={(value) => setActiveTab(value as SettingsTab)}

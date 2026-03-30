@@ -243,58 +243,71 @@ pub fn repair_repository(app: AppHandle) -> ApiResponse<RepositoryStatusDto> {
 }
 
 #[tauri::command]
-pub fn inspect_github_repository(
+pub async fn inspect_github_repository(
     app: AppHandle,
     input: InspectGithubRepositoryInputDto,
 ) -> ApiResponse<SkillImportPreviewDto> {
-    let connection = match connection::open_app_database(&app) {
-        Ok(connection) => connection,
-        Err(error) => return ApiResponse::failure(error),
-    };
-    let repository_root = match repository_service::default_repository_root(&app) {
-        Ok(path) => path,
-        Err(error) => return ApiResponse::failure(error),
-    };
+    let app_handle = app.clone();
+    let source_url = input.url.clone();
 
-    match skill_install_service::inspect_github_repository(
-        &connection,
-        &repository_root,
-        &input.url,
-    ) {
-        Ok(candidates) => ApiResponse::success(SkillImportPreviewDto {
+    match tauri::async_runtime::spawn_blocking(move || {
+        let connection = connection::open_app_database(&app_handle)?;
+        let repository_root = repository_service::default_repository_root(&app_handle)?;
+        let candidates =
+            skill_install_service::inspect_github_repository(&connection, &repository_root, &source_url)?;
+
+        Ok::<SkillImportPreviewDto, AppError>(SkillImportPreviewDto {
             source_type: "github".to_string(),
-            source_label: input.url,
+            source_label: source_url,
             candidates: candidates.into_iter().map(Into::into).collect(),
-        }),
-        Err(error) => ApiResponse::failure(error),
+        })
+    })
+    .await
+    {
+        Ok(Ok(preview)) => ApiResponse::success(preview),
+        Ok(Err(error)) => ApiResponse::failure(error),
+        Err(error) => ApiResponse::failure(AppError::new(
+            "system/blocking-task-failed",
+            "GitHub 仓库识别任务执行失败",
+            Some(error.to_string()),
+            true,
+        )),
     }
 }
 
 #[tauri::command]
-pub fn inspect_local_directory(
+pub async fn inspect_local_directory(
     app: AppHandle,
     input: InspectLocalDirectoryInputDto,
 ) -> ApiResponse<SkillImportPreviewDto> {
-    let connection = match connection::open_app_database(&app) {
-        Ok(connection) => connection,
-        Err(error) => return ApiResponse::failure(error),
-    };
-    let repository_root = match repository_service::default_repository_root(&app) {
-        Ok(path) => path,
-        Err(error) => return ApiResponse::failure(error),
-    };
+    let app_handle = app.clone();
+    let source_path = input.path.clone();
 
-    match skill_install_service::inspect_source_directory(
-        &connection,
-        &repository_root,
-        std::path::Path::new(&input.path),
-    ) {
-        Ok(candidates) => ApiResponse::success(SkillImportPreviewDto {
+    match tauri::async_runtime::spawn_blocking(move || {
+        let connection = connection::open_app_database(&app_handle)?;
+        let repository_root = repository_service::default_repository_root(&app_handle)?;
+        let candidates = skill_install_service::inspect_source_directory(
+            &connection,
+            &repository_root,
+            std::path::Path::new(&source_path),
+        )?;
+
+        Ok::<SkillImportPreviewDto, AppError>(SkillImportPreviewDto {
             source_type: "local".to_string(),
-            source_label: input.path,
+            source_label: source_path,
             candidates: candidates.into_iter().map(Into::into).collect(),
-        }),
-        Err(error) => ApiResponse::failure(error),
+        })
+    })
+    .await
+    {
+        Ok(Ok(preview)) => ApiResponse::success(preview),
+        Ok(Err(error)) => ApiResponse::failure(error),
+        Err(error) => ApiResponse::failure(AppError::new(
+            "system/blocking-task-failed",
+            "本地目录识别任务执行失败",
+            Some(error.to_string()),
+            true,
+        )),
     }
 }
 

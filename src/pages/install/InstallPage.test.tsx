@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AppRouter } from '@/app/router/AppRouter'
+import type { SkillImportPreview } from '@/lib/tauri/contracts'
 import { useAppStore } from '@/stores/app-store'
 
 const {
@@ -73,23 +74,14 @@ describe('InstallPage', () => {
 	})
 
 	it('支持 GitHub 仓库识别并导入后显示回流入口', async () => {
-		inspectGithubRepositoryMock.mockResolvedValue({
-			sourceType: 'github',
-			sourceLabel: 'https://github.com/example/skills',
-			candidates: [
-				{
-					relativePath: '',
-					slug: 'example-skill',
-					name: 'Example Skill',
-					description: '测试 Skill',
-					author: 'Stone',
-					version: '1.2.3',
-					readmePath: '/tmp/README.md',
-					missingFields: [],
-					conflicts: [],
-				},
-			],
-		})
+		let resolveInspect: ((value: SkillImportPreview) => void) | undefined
+
+		inspectGithubRepositoryMock.mockImplementation(
+			() =>
+				new Promise((resolve) => {
+					resolveInspect = resolve
+				}),
+		)
 		importGithubSkillMock.mockResolvedValue({
 			id: 'skill-new',
 			slug: 'example-skill',
@@ -122,10 +114,58 @@ describe('InstallPage', () => {
 		fireEvent.change(await screen.findByPlaceholderText('https://github.com/user/repo 或 user/repo'), {
 			target: { value: 'https://github.com/example/skills' },
 		})
-		fireEvent.click(screen.getByRole('button', { name: '识别仓库' }))
+		const inspectButton = screen.getByRole('button', { name: '识别仓库' })
+		fireEvent.click(inspectButton)
 
-		await screen.findByText('Example Skill')
-		fireEvent.click(screen.getByRole('button', { name: '导入 Example Skill' }))
+		await waitFor(() => {
+			expect(screen.getByRole('button', { name: '识别中...' })).toBeDisabled()
+		})
+		expect(screen.getByTestId('github-inspect-loader')).toHaveClass('animate-spin')
+
+		resolveInspect?.({
+			sourceType: 'github',
+			sourceLabel: 'https://github.com/example/skills',
+			candidates: [
+				{
+					relativePath: '',
+					slug: 'example-skill',
+					name: 'Example Skill',
+					description: '测试 Skill',
+					author: 'Stone',
+					version: '1.2.3',
+					readmePath: '/tmp/README.md',
+					missingFields: [],
+					conflicts: [],
+				},
+				{
+					relativePath: 'skills/broken',
+					slug: 'broken-skill',
+					name: 'Broken Skill',
+					description: null,
+					author: 'Stone',
+					version: '0.1.0',
+					readmePath: null,
+					missingFields: ['description'],
+					conflicts: ['slug 冲突：broken-skill'],
+				},
+			],
+		})
+
+		await screen.findByText('识别到 2 个技能')
+		expect(screen.queryByTestId('install-github-input-row')).not.toBeInTheDocument()
+		expect(screen.queryByTestId('install-main-card')).not.toBeInTheDocument()
+		expect(screen.getByTestId('install-page-shell')).toHaveClass('overflow-hidden')
+		expect(screen.getByTestId('install-github-preview-stage')).toHaveClass('min-h-0')
+		expect(screen.getByTestId('install-github-preview-stage')).toHaveClass('flex-1')
+		expect(screen.getByDisplayValue('https://github.com/example/skills')).toHaveAttribute('readonly')
+		expect(screen.queryByText('来源：https://github.com/example/skills')).not.toBeInTheDocument()
+		expect(screen.getByRole('button', { name: '安装全部' })).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: '查看详情' })).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: '安装选中' })).toBeDisabled()
+		expect(screen.getByRole('button', { name: '取消' })).toBeDisabled()
+		expect(screen.getByText('Broken Skill')).toBeInTheDocument()
+		expect(screen.getByText('不可安装：缺失字段 description；slug 冲突：broken-skill')).toBeInTheDocument()
+		fireEvent.click(screen.getByRole('button', { name: '安装全部' }))
 
 		await waitFor(() => {
 			expect(importGithubSkillMock).toHaveBeenCalledWith({
@@ -136,8 +176,37 @@ describe('InstallPage', () => {
 				descriptionOverride: null,
 			})
 		})
+		expect(importGithubSkillMock).toHaveBeenCalledTimes(1)
 
 		expect(await screen.findByText('导入完成')).toBeInTheDocument()
+	})
+
+	it('调用 GitHub 识别命令前会先进入 loading 状态', async () => {
+		inspectGithubRepositoryMock.mockImplementation(async () => {
+			expect(screen.getByRole('button', { name: '识别中...' })).toBeDisabled()
+			expect(screen.getByTestId('github-inspect-loader')).toBeInTheDocument()
+
+			return {
+				sourceType: 'github',
+				sourceLabel: 'https://github.com/example/skills',
+				candidates: [],
+			}
+		})
+
+		render(
+			<MemoryRouter initialEntries={['/install']}>
+				<AppRouter />
+			</MemoryRouter>,
+		)
+
+		fireEvent.change(await screen.findByPlaceholderText('https://github.com/user/repo 或 user/repo'), {
+			target: { value: 'https://github.com/example/skills' },
+		})
+		fireEvent.click(screen.getByRole('button', { name: '识别仓库' }))
+
+		await waitFor(() => {
+			expect(inspectGithubRepositoryMock).toHaveBeenCalledTimes(1)
+		})
 	})
 
 	it('在全局 Header 岛中只展示标题而不重复渲染旧页面头部', async () => {
@@ -162,6 +231,8 @@ describe('InstallPage', () => {
 		expect(screen.getByTestId('install-source-rail')).toHaveClass('shadow-none')
 		expect(screen.getByTestId('install-source-rail')).toHaveClass('self-start')
 		expect(screen.getByTestId('install-source-rail')).not.toHaveClass('w-full')
+		expect(screen.getByTestId('install-page-shell')).not.toHaveClass('py-1')
+		expect(screen.getByTestId('install-page-shell')).not.toHaveClass('md:py-2')
 		expect(screen.getByTestId('install-main-card')).not.toContainElement(screen.getByTestId('install-source-rail'))
 		expect(screen.getByTestId('install-main-card')).toHaveClass('bg-white')
 		expect(screen.getByTestId('install-main-card')).toHaveClass('shadow-none')
@@ -275,9 +346,12 @@ describe('InstallPage', () => {
 		})
 		fireEvent.click(screen.getByRole('button', { name: '识别仓库' }))
 
-		expect(await screen.findByText('缺失字段：description')).toBeInTheDocument()
-		expect(screen.getByText('冲突提示：slug 冲突：broken-skill')).toBeInTheDocument()
-		expect(screen.getByRole('button', { name: '导入 Broken Skill' })).toBeDisabled()
+		expect(await screen.findByText('Broken Skill')).toBeInTheDocument()
+		expect(screen.getByText('不可安装：缺失字段 description；slug 冲突：broken-skill')).toBeInTheDocument()
+		const disabledCard = screen.getByTestId('github-import-candidate-card-skills/broken')
+		expect(disabledCard).toHaveAttribute('aria-disabled', 'true')
+		fireEvent.click(disabledCard)
+		expect(screen.getByRole('button', { name: '安装选中' })).toBeDisabled()
 	})
 
 	it('导入失败时会保留输入并展示错误', async () => {
@@ -301,5 +375,143 @@ describe('InstallPage', () => {
 
 		expect(await screen.findByText('导入预览失败')).toBeInTheDocument()
 		expect(screen.getByDisplayValue('https://github.com/example/missing')).toBeInTheDocument()
+	})
+
+	it('支持选择候选项、取消选择并安装选中项', async () => {
+		inspectGithubRepositoryMock.mockResolvedValue({
+			sourceType: 'github',
+			sourceLabel: 'https://github.com/example/skills',
+			candidates: [
+				{
+					relativePath: '',
+					slug: 'skill-alpha',
+					name: 'Skill Alpha',
+					description: 'Alpha 描述',
+					author: 'Stone',
+					version: '1.0.0',
+					readmePath: '/tmp/README.md',
+					missingFields: [],
+					conflicts: [],
+				},
+				{
+					relativePath: 'skills/beta',
+					slug: 'skill-beta',
+					name: 'Skill Beta',
+					description: 'Beta 描述',
+					author: 'Stone',
+					version: '1.0.0',
+					readmePath: '/tmp/README.md',
+					missingFields: [],
+					conflicts: [],
+				},
+			],
+		})
+		importGithubSkillMock.mockResolvedValue({
+			id: 'skill-alpha',
+			slug: 'skill-alpha',
+			name: 'Skill Alpha',
+			version: '1.0.0',
+			description: 'Alpha 描述',
+			author: 'Stone',
+			localPath: '/Users/test/.stoneskills/skills/skill-alpha',
+			icon: null,
+			readmePath: '/Users/test/.stoneskills/skills/skill-alpha/README.md',
+			installMethod: 'copy',
+			checksum: null,
+			status: 'ready',
+			extraMetadataJson: null,
+			tags: [],
+			sources: [],
+			supportedTargets: [],
+			createdAt: 1,
+			updatedAt: 1,
+			lastCheckedAt: null,
+		})
+		listSkillsMock.mockResolvedValue([])
+
+		render(
+			<MemoryRouter initialEntries={['/install']}>
+				<AppRouter />
+			</MemoryRouter>,
+		)
+
+		fireEvent.change(await screen.findByPlaceholderText('https://github.com/user/repo 或 user/repo'), {
+			target: { value: 'https://github.com/example/skills' },
+		})
+		fireEvent.click(screen.getByRole('button', { name: '识别仓库' }))
+
+		await screen.findByText('Skill Alpha')
+		const alphaCard = screen.getByTestId('github-import-candidate-card-skill-alpha')
+		const betaCard = screen.getByTestId('github-import-candidate-card-skills/beta')
+
+		fireEvent.click(alphaCard)
+		expect(alphaCard).toHaveAttribute('aria-pressed', 'true')
+		expect(betaCard).toHaveAttribute('aria-pressed', 'false')
+		expect(screen.getByRole('button', { name: '安装选中' })).not.toBeDisabled()
+		expect(screen.getByRole('button', { name: '取消' })).not.toBeDisabled()
+
+		fireEvent.click(screen.getByRole('button', { name: '取消' }))
+		expect(alphaCard).toHaveAttribute('aria-pressed', 'false')
+		expect(screen.getByRole('button', { name: '安装选中' })).toBeDisabled()
+
+		fireEvent.click(alphaCard)
+		fireEvent.click(betaCard)
+		fireEvent.click(screen.getByRole('button', { name: '安装选中' }))
+
+		await waitFor(() => {
+			expect(importGithubSkillMock).toHaveBeenCalledTimes(2)
+		})
+		expect(importGithubSkillMock).toHaveBeenNthCalledWith(1, {
+			url: 'https://github.com/example/skills',
+			relativePath: '',
+			slugOverride: null,
+			nameOverride: null,
+			descriptionOverride: null,
+		})
+		expect(importGithubSkillMock).toHaveBeenNthCalledWith(2, {
+			url: 'https://github.com/example/skills',
+			relativePath: 'skills/beta',
+			slugOverride: null,
+			nameOverride: null,
+			descriptionOverride: null,
+		})
+	})
+
+	it('切换到本地目录时不会渲染 GitHub 结果态组件', async () => {
+		inspectGithubRepositoryMock.mockResolvedValue({
+			sourceType: 'github',
+			sourceLabel: 'https://github.com/example/skills',
+			candidates: [
+				{
+					relativePath: '',
+					slug: 'skill-alpha',
+					name: 'Skill Alpha',
+					description: 'Alpha 描述',
+					author: 'Stone',
+					version: '1.0.0',
+					readmePath: '/tmp/README.md',
+					missingFields: [],
+					conflicts: [],
+				},
+			],
+		})
+
+		render(
+			<MemoryRouter initialEntries={['/install']}>
+				<AppRouter />
+			</MemoryRouter>,
+		)
+
+		fireEvent.change(await screen.findByPlaceholderText('https://github.com/user/repo 或 user/repo'), {
+			target: { value: 'https://github.com/example/skills' },
+		})
+		fireEvent.click(screen.getByRole('button', { name: '识别仓库' }))
+
+		await screen.findByText('Skill Alpha')
+		fireEvent.click(screen.getByRole('tab', { name: '本地目录' }))
+
+		expect(screen.queryByRole('button', { name: '安装全部' })).not.toBeInTheDocument()
+		expect(screen.queryByText('Skill Alpha')).not.toBeInTheDocument()
+		expect(screen.getByPlaceholderText('输入本地 Skill 目录')).toBeInTheDocument()
 	})
 })
