@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import type { CommandError, Skill, SkillImportCandidate, SkillImportPreview } from '@/lib/tauri/contracts'
 import {
@@ -11,6 +11,7 @@ import {
 import { normalizeCommandError } from '@/lib/tauri/errors'
 import { usePageHeader } from '@/app/layout/PageHeaderContext'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { ArrowLeftIcon, type ArrowLeftIconHandle } from '@/components/ui/arrow-left'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -142,10 +143,21 @@ export function InstallPage() {
 	const [selectedCandidateKeys, setSelectedCandidateKeys] = useState<string[]>([])
 	const [installingMode, setInstallingMode] = useState<InstallingMode>(null)
 	const [successMessage, setSuccessMessage] = useState<string | null>(null)
+	const [isBackButtonHovered, setIsBackButtonHovered] = useState(false)
+	const backIconRef = useRef<ArrowLeftIconHandle>(null)
 
 	const activeSourceValue = sourceType === 'github' ? githubUrl : localPath
 	const headerContent = usePageHeader('导入 / 安装')
 	const isGithubPreviewActive = sourceType === 'github' && preview?.sourceType === 'github'
+
+	useEffect(() => {
+		if (isBackButtonHovered) {
+			backIconRef.current?.startAnimation()
+			return
+		}
+
+		backIconRef.current?.stopAnimation()
+	}, [isBackButtonHovered])
 
 	const handleSourceTypeChange = (nextSourceType: InstallSource) => {
 		setSourceType(nextSourceType)
@@ -154,6 +166,7 @@ export function InstallPage() {
 		setSuccessMessage(null)
 		setSelectedCandidateKeys([])
 		setInstallingMode(null)
+		setIsBackButtonHovered(false)
 	}
 
 	const handleInspect = async () => {
@@ -319,6 +332,15 @@ export function InstallPage() {
 		await handleInstallGithubCandidates(candidates, 'all')
 	}
 
+	const handleBackToGithubEntry = () => {
+		setPreview(null)
+		setPreviewError(null)
+		setSuccessMessage(null)
+		setSelectedCandidateKeys([])
+		setInstallingMode(null)
+		setIsBackButtonHovered(false)
+	}
+
 	return (
 		<>
 			{headerContent}
@@ -329,24 +351,46 @@ export function InstallPage() {
 					value={sourceType}
 					onValueChange={(value) => handleSourceTypeChange(value as InstallSource)}
 					className={`flex flex-col gap-3 ${isGithubPreviewActive ? 'h-full min-h-0' : ''}`}>
-					<TabsList
-						data-testid='install-source-rail'
-						className='h-12 self-start justify-start rounded-full border border-border/70 bg-white p-1 shadow-none'>
-						<TabsTrigger
-							value='github'
-							onClick={() => handleSourceTypeChange('github')}>
-							GitHub
-						</TabsTrigger>
-						<TabsTrigger
-							value='local'
-							onClick={() => handleSourceTypeChange('local')}>
-							本地目录
-						</TabsTrigger>
-					</TabsList>
+					<div
+						data-testid='install-source-controls'
+						className='flex flex-wrap items-center gap-3'>
+						{isGithubPreviewActive ? (
+							<Button
+								type='button'
+								variant='outline'
+								aria-label='返回'
+								data-hovered={isBackButtonHovered ? 'true' : 'false'}
+								onMouseEnter={() => setIsBackButtonHovered(true)}
+								onMouseLeave={() => setIsBackButtonHovered(false)}
+								onClick={handleBackToGithubEntry}>
+								<ArrowLeftIcon
+									aria-hidden='true'
+									data-icon='inline-start'
+									ref={backIconRef}
+									size={14}
+								/>
+								<span>返回</span>
+							</Button>
+						) : null}
+						<TabsList
+							data-testid='install-source-rail'
+							className='h-12 self-start justify-start rounded-full border border-border/70 bg-white p-1 shadow-none'>
+							<TabsTrigger
+								value='github'
+								onClick={() => handleSourceTypeChange('github')}>
+								GitHub
+							</TabsTrigger>
+							<TabsTrigger
+								value='local'
+								onClick={() => handleSourceTypeChange('local')}>
+								本地目录
+							</TabsTrigger>
+						</TabsList>
+					</div>
 					{isGithubPreviewActive ? (
 						<div
 							data-testid='install-github-preview-stage'
-							className='flex min-h-0 flex-1 flex-col gap-4'>
+							className='flex min-h-0 flex-1 flex-col gap-3'>
 							{previewError ? (
 								<Alert variant='destructive'>
 									<AlertTitle>导入预览失败</AlertTitle>

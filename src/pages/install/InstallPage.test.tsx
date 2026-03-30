@@ -151,20 +151,28 @@ describe('InstallPage', () => {
 			],
 		})
 
-		await screen.findByText('识别到 2 个技能')
+		await screen.findByRole('button', { name: '返回' })
 		expect(screen.queryByTestId('install-github-input-row')).not.toBeInTheDocument()
 		expect(screen.queryByTestId('install-main-card')).not.toBeInTheDocument()
 		expect(screen.getByTestId('install-page-shell')).toHaveClass('overflow-hidden')
 		expect(screen.getByTestId('install-github-preview-stage')).toHaveClass('min-h-0')
 		expect(screen.getByTestId('install-github-preview-stage')).toHaveClass('flex-1')
+		expect(screen.getByTestId('install-github-preview-stage')).toHaveClass('gap-3')
 		expect(screen.getByDisplayValue('https://github.com/example/skills')).toHaveAttribute('readonly')
 		expect(screen.queryByText('来源：https://github.com/example/skills')).not.toBeInTheDocument()
+		const backButton = screen.getByRole('button', { name: '返回' })
+		expect(backButton).toBeInTheDocument()
+		expect(backButton).toHaveAttribute('data-hovered', 'false')
 		expect(screen.getByRole('button', { name: '安装全部' })).toBeInTheDocument()
 		expect(screen.getByRole('button', { name: '查看详情' })).toBeInTheDocument()
 		expect(screen.getByRole('button', { name: '安装选中' })).toBeDisabled()
 		expect(screen.getByRole('button', { name: '取消' })).toBeDisabled()
 		expect(screen.getByText('Broken Skill')).toBeInTheDocument()
 		expect(screen.getByText('不可安装：缺失字段 description；slug 冲突：broken-skill')).toBeInTheDocument()
+		fireEvent.mouseEnter(backButton)
+		expect(backButton).toHaveAttribute('data-hovered', 'true')
+		fireEvent.mouseLeave(backButton)
+		expect(backButton).toHaveAttribute('data-hovered', 'false')
 		fireEvent.click(screen.getByRole('button', { name: '安装全部' }))
 
 		await waitFor(() => {
@@ -475,6 +483,44 @@ describe('InstallPage', () => {
 			nameOverride: null,
 			descriptionOverride: null,
 		})
+	})
+
+	it('结果态支持返回上一步并保留已输入的 GitHub 地址', async () => {
+		inspectGithubRepositoryMock.mockResolvedValue({
+			sourceType: 'github',
+			sourceLabel: 'https://github.com/example/skills',
+			candidates: [
+				{
+					relativePath: '',
+					slug: 'skill-alpha',
+					name: 'Skill Alpha',
+					description: 'Alpha 描述',
+					author: 'Stone',
+					version: '1.0.0',
+					readmePath: '/tmp/README.md',
+					missingFields: [],
+					conflicts: [],
+				},
+			],
+		})
+
+		render(
+			<MemoryRouter initialEntries={['/install']}>
+				<AppRouter />
+			</MemoryRouter>,
+		)
+
+		fireEvent.change(await screen.findByPlaceholderText('https://github.com/user/repo 或 user/repo'), {
+			target: { value: 'https://github.com/example/skills' },
+		})
+		fireEvent.click(screen.getByRole('button', { name: '识别仓库' }))
+
+		await screen.findByText('Skill Alpha')
+		fireEvent.click(screen.getByRole('button', { name: '返回' }))
+
+		expect(screen.queryByTestId('github-import-preview-root')).not.toBeInTheDocument()
+		expect(screen.getByDisplayValue('https://github.com/example/skills')).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: '识别仓库' })).toBeInTheDocument()
 	})
 
 	it('切换到本地目录时不会渲染 GitHub 结果态组件', async () => {

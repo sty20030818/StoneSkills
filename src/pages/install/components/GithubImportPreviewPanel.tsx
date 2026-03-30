@@ -47,13 +47,13 @@ export function GithubImportPreviewPanel({
 	return (
 		<div
 			data-testid='github-import-preview-root'
-			className='flex h-full min-h-0 flex-col gap-4'>
+			className='flex h-full min-h-0 flex-col gap-3'>
 			<Card
 				data-testid='github-import-preview-summary'
 				className='shrink-0 rounded-[1.65rem] border-border/70 bg-white py-5 shadow-none'>
-				<CardContent className='grid gap-4'>
-					<div className='flex flex-wrap items-center justify-between gap-4'>
-						<div className='flex flex-wrap items-center gap-4'>
+				<CardContent className='grid gap-3'>
+					<div className='flex flex-wrap items-center justify-between gap-3'>
+						<div className='flex flex-wrap items-center gap-3'>
 							<h2 className='text-lg font-semibold tracking-[-0.03em] text-foreground'>Git 仓库地址</h2>
 							<p className='text-sm text-muted-foreground'>
 								<span className='sr-only'>{`识别到 ${candidates.length} 个技能`}</span>
@@ -91,11 +91,13 @@ export function GithubImportPreviewPanel({
 			<Card
 				data-testid='github-import-preview-list-card'
 				className='min-h-0 flex-1 rounded-[1.9rem] border-border/70 bg-white shadow-none'>
-				<CardContent className='flex min-h-0 flex-1 flex-col gap-4 pt-1'>
+				<CardContent className='flex min-h-0 flex-1 flex-col gap-3 pt-1'>
 					<div
 						data-testid='github-import-preview-list-shell'
-						className='scrollbar-hidden min-h-0 flex-1 overflow-y-auto pb-2'>
-						<div className='grid gap-4'>
+						className='scrollbar-hidden min-h-0 flex-1 overflow-y-auto pb-1'>
+						<div
+							data-testid='github-import-preview-list-items'
+							className='grid gap-3'>
 							{candidates.map((candidate) => {
 								const candidateKey = candidate.relativePath || candidate.slug
 								const disabled = !isCandidateInstallable(candidate)
@@ -117,7 +119,7 @@ export function GithubImportPreviewPanel({
 				</CardContent>
 				<div
 					data-testid='github-import-preview-actions'
-					className='shrink-0 flex items-center justify-end gap-3 px-4 pb-4'>
+					className='shrink-0 flex items-center justify-end gap-3 px-4 pb-3'>
 					<Button
 						type='button'
 						variant='outline'
